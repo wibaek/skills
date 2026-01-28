@@ -2,7 +2,7 @@
 
 ## .vscode/settings.json Examples
 
-### Basic Settings (ruff only)
+### Ruff Settings Only
 
 ```json
 {
@@ -13,28 +13,14 @@
       "source.fixAll": "explicit",
       "source.organizeImports": "explicit"
     }
-  },
-  "ruff.enable": true,
-  "ruff.format.args": [],
-  "ruff.lint.args": []
+  }
 }
 ```
 
-### Ruff + ty Settings
+### ty Type Checking Settings Only
 
 ```json
 {
-  "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
-    }
-  },
-  "ruff.enable": true,
-  "ruff.format.args": [],
-  "ruff.lint.args": [],
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.diagnosticMode": "workspace"
 }

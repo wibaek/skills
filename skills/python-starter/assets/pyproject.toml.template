@@ -1,9 +1,14 @@
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SIM", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "NPY", "RUF"]
+select = [
+  "F",              # Pyflakes
+  "E4", "E7", "E9", # pycodestyle errors (subset compatible with Black)
+  # The entries below are not part of Ruff's default rule selection.
+  "I",              # isort
+]
 ignore = []
 
 [tool.ruff.format]
