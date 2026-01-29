@@ -26,19 +26,23 @@ Automatically configures formatter and linter when initializing Python projects.
    - Add ruff configuration (see [pyproject-toml-examples.md](references/pyproject-toml-examples.md) for default settings)
    - Template: [assets/pyproject.toml.template](assets/pyproject.toml.template)
 
-4. **Type Checking Setup (Optional)**
+4. **Install pytest**
+   - Install pytest as dev dependency based on selected environment
+   - Use commands (avoid writing code directly)
+
+5. **Type Checking Setup (Optional)**
    - Ask the user if they want ty setup
    - Install ty as dev dependency if needed
    - Add ty configuration to `pyproject.toml`
    - Reference: [pyproject-toml-examples.md](references/pyproject-toml-examples.md)
 
-5. **Pre-commit Setup (Optional)**
+6. **Pre-commit Setup (Optional)**
    - Ask the user if they want pre-commit setup
    - Install pre-commit and create `.pre-commit-config.yaml` if needed
    - Reference: [pre-commit-setup.md](references/pre-commit-setup.md)
    - Template: [assets/.pre-commit-config.yaml.template](assets/.pre-commit-config.yaml.template)
 
-6. **VSCode Settings Suggestion**
+7. **VSCode Settings Suggestion**
    - Suggest creating `.vscode/settings.json` when using VSCode
    - Include ruff and ty (if configured) settings
    - Reference: [vscode-settings.md](references/vscode-settings.md)
@@ -48,7 +52,7 @@ Automatically configures formatter and linter when initializing Python projects.
 
 - **Command-first**: Use commands whenever possible instead of writing code directly
 - **Use pyproject.toml**: Store all configuration in `pyproject.toml`
-- **Dev dependencies**: Install ruff, ty, and pre-commit as dev dependencies
+- **Dev dependencies**: Install ruff, pytest, ty, and pre-commit as dev dependencies
 - **User confirmation**: Confirm with user for environment selection, ty, and pre-commit before proceeding
 
 ## References
