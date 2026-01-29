@@ -48,6 +48,11 @@ Automatically configures formatter and linter when initializing Python projects.
    - Reference: [vscode-settings.md](references/vscode-settings.md)
    - Template: [assets/.vscode-settings.json.template](assets/.vscode-settings.json.template)
 
+8. **Create .gitignore**
+   - Create `.gitignore` if it doesn't exist
+   - Include common Python ignores for virtual environments, cache files, build artifacts, IDE files, and OS files
+   - Template: [assets/.gitignore.template](assets/.gitignore.template)
+
 ## Principles
 
 - **Command-first**: Use commands whenever possible instead of writing code directly
