@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit Writer"
+  short_description: "Draft commits from staged or changed diff"
+  default_prompt: "Use $git-commit-writer to inspect the current diff and produce a Conventional Commit message, then commit safely if requested."
