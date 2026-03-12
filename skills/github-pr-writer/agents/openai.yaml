@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub PR Writer"
+  short_description: "Draft GitHub PR titles and structured bodies"
+  default_prompt: "Use $github-pr-writer to summarize the current branch into a PR title and body that matches the repository template."
