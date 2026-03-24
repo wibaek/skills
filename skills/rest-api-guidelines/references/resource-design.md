@@ -69,6 +69,26 @@
 
 중첩은 “scope”를 표현할 때만 쓰고, 조회 편의 때문에 path를 끝없이 깊게 만들지 않는다.
 
+### 2.5 (Optional) namespce는 필요한 경우에만 사용한다
+
+- namespace는 API를 외부 관점의 도메인이나 역할 기준으로 구분해야 할 때만 도입한다.
+- 단순한 내부 모듈명, 서비스명, 팀명, 패키지명은 path에 노출하지 않는다.
+- namespace를 사용하더라도 리소스명은 기존 규칙대로 명사형 복수형으로 유지한다.
+- 문서 분류만을 위한 목적이라면 namespace 대신 OpenAPI tag 등 문서화 수단을 사용한다.
+- namespace를 포함하더라도 path depth는 과도하게 깊어지지 않게 제한한다.
+
+예:
+
+- `/v1/billing/invoices`
+- `/v1/admin/users`
+- `/v1/public/articles`
+
+지양 예:
+
+- `/v1/service-a/users`
+- `/v1/user-module/profiles`
+- `/v1/team-backend/orders`
+
 ## 3. JSON 필드 네이밍 / 데이터 표현
 
 ### 3.1 JSON 필드명은 하나로 통일한다
