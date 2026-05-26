@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub PR Writer"
+  short_description: "GitHub PR 제목과 구조화된 body 작성"
+  default_prompt: "$github-pr-writer를 사용해 현재 branch를 repository template에 맞는 PR title과 body로 요약하세요."

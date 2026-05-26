@@ -1,7 +1,0 @@
-interface:
-  display_name: "Benchmark PRD Scout"
-  short_description: "Research benchmarks into PRDs and backlogs"
-  default_prompt: "Use $benchmark-prd-scout to research product or open-source benchmarks and turn the findings into a feature inventory, PRD, MVP scope, and backlog."
-
-policy:
-  allow_implicit_invocation: false

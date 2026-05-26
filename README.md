@@ -156,6 +156,90 @@ Automatically configures formatter and linter settings when initializing Python 
 5. Optionally configures pre-commit hooks
 6. Suggests VSCode settings if applicable
 
+### ts-starter
+
+Automatically configures TypeScript project quality tooling without scaffolding applications. Uses pnpm by default when no lockfile exists, preserves existing package managers, and sets up TypeScript, Biome (lint/format), and Vitest with strict-and-safety defaults.
+
+**Use when:**
+
+- "Start a TypeScript project setup"
+- "Set up TS lint/format/test"
+- "Configure Node TypeScript starter"
+- "Standardize TypeScript tooling"
+- "Set up Vite TypeScript config"
+
+**Features:**
+
+- **Config-only workflow**: Focuses on quality tooling configuration, not framework app scaffolding
+- **Package manager policy**: pnpm-first for new projects, lockfile-aware for existing projects
+- **TypeScript baseline**: ESM defaults and strict-and-safety compiler options
+- **Biome setup**: Unified lint and format configuration with standard scripts
+- **Vitest setup**: Default test runner across frontend, node-app, and library projects
+- **Optional extras**: VSCode workspace settings and Husky/lint-staged Git hooks on demand
+
+**Workflow:**
+
+1. Detect package manager (pnpm preferred, preserve existing lockfile manager)
+2. Detect project kind (frontend, node-app, library)
+3. Install TypeScript, Biome, and Vitest baseline dependencies
+4. Apply strict `tsconfig.json`, `biome.json`, and `vitest.config.ts`
+5. Optionally configure VSCode settings and Git hooks
+6. Validate with typecheck, lint, and test commands
+
+### git-commit-writer
+
+Drafts Conventional Commit messages from the actual git diff and supports a safe commit workflow that avoids unrelated files.
+
+**Use when:**
+
+- "커밋 메시지 만들어줘"
+- "이 변경사항으로 커밋해줘"
+- "Conventional Commit 형식으로 정리해줘"
+- Reviewing staged changes before committing
+
+**Features:**
+
+- Infers the correct commit type from the diff
+- Recommends scopes only when they improve clarity
+- Preserves unrelated work by focusing on staged or task-relevant files
+- Adds a commit body only when reasoning or tradeoffs need explanation
+
+### github-pr-writer
+
+Drafts GitHub pull request titles and structured PR bodies from branch history, diff summaries, and validation results.
+
+**Use when:**
+
+- "PR 본문 작성해줘"
+- "이 브랜치로 PR 열어줘"
+- "현재 변경사항을 리뷰용으로 요약해줘"
+- Preparing `gh pr create` input
+
+**Features:**
+
+- Builds PR context from branch and diff evidence
+- Fills a consistent `요약 / 변경 사항 / 검증 / 노트` template
+- Keeps validation notes accurate instead of inventing test results
+- Calls out mixed or unrelated work before opening the PR
+
+### api-error-standard
+
+Standardizes API error responses using RFC 9457 and RFC 7807 (Problem Details for HTTP APIs). Recommends libraries and patterns for Python, JavaScript/TypeScript, and Java to catch exceptions and return `application/problem+json`.
+
+**Use when:**
+
+- Implementing or refactoring API error handling
+- Adding exception handlers that return a consistent error format
+- Working with RFC 7807, RFC 9457, problem details, or standardized error responses
+
+**Covered:**
+
+- Problem details object (type, title, status, detail, instance, extensions)
+- Python: httpproblem, fastapi-rfc7807
+- JavaScript/TypeScript: rfc-7807-problem-details (Express/Koa/Oak)
+- Java: Spring ProblemDetail, ErrorResponse, ResponseEntityExceptionHandler
+- Validation errors (422) with pointer/detail extensions
+
 ## Installation
 
 ```bash
@@ -173,8 +257,16 @@ Skills are automatically available once installed. The agent will use them when 
 - "Create a data analysis Python project"
 - "Set up Python project with linting"
 - "Initialize Python project with ruff"
+- "Set up TS lint/format/test"
+- "Configure Node TypeScript starter"
 
 ## Skill Structure
+
+Skills are grouped by category:
+
+- `skills/personal/` - personal workflow and project setup preferences
+- `skills/general/` - reusable technical standards and guidelines
+- `skills/superpowers/` - process-oriented workflow skills
 
 Each skill contains:
 

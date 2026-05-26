@@ -1,0 +1,7 @@
+interface:
+  display_name: "Benchmark PRD Scout"
+  short_description: "Benchmark 조사를 PRD와 backlog로 정리"
+  default_prompt: "$benchmark-prd-scout를 사용해 product 또는 open-source benchmark를 조사하고, 결과를 기능 목록, PRD, MVP 범위, backlog로 정리하세요."
+
+policy:
+  allow_implicit_invocation: false

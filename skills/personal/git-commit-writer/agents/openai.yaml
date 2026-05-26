@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit Writer"
+  short_description: "staged/changed diff로 commit 작성"
+  default_prompt: "$git-commit-writer를 사용해 현재 diff를 확인하고 Conventional Commit 메시지를 만든 뒤, 요청받으면 안전하게 commit하세요."
