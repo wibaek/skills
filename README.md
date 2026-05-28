@@ -34,6 +34,7 @@ npx skills add wibaek/skills
 | `git-commit-writer` | 실제 git diff를 바탕으로 Conventional Commit 메시지 작성과 commit workflow 수행 |
 | `github-pr-writer` | branch history, diff, 검증 결과를 바탕으로 GitHub PR 제목과 본문 작성 |
 | `benchmark-prd-scout` | 명시적으로 호출됐을 때만 제품/서비스 벤치마킹 결과를 PRD, 기능 목록, 백로그로 정리 |
+| `adr-writer` | Paulo Merson 스타일의 간결한 ADR 작성 |
 
 ### 기술 표준
 
