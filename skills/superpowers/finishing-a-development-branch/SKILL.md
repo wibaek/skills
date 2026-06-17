@@ -21,7 +21,7 @@ description: 구현이 완료되고 모든 테스트가 통과한 뒤, merge, PR
 
 ```bash
 # 프로젝트 테스트 스위트 실행
-npm test / cargo test / pytest / go test ./...
+pnpm test / cargo test / pytest / go test ./...
 ```
 
 **테스트가 실패하면:**
@@ -49,11 +49,11 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 
 이 값으로 어떤 메뉴를 보여줄지와 정리 방식을 결정한다:
 
-| 상태 | 메뉴 | 정리 |
-| --- | --- | --- |
-| `GIT_DIR == GIT_COMMON`(일반 repo) | 표준 4개 선택지 | 정리할 worktree 없음 |
-| `GIT_DIR != GIT_COMMON`, 이름 있는 브랜치 | 표준 4개 선택지 | 출처 기반(6단계 참고) |
-| `GIT_DIR != GIT_COMMON`, detached HEAD | 축소된 3개 선택지(merge 없음) | 정리 없음(외부 관리) |
+| 상태                                      | 메뉴                          | 정리                  |
+| ----------------------------------------- | ----------------------------- | --------------------- |
+| `GIT_DIR == GIT_COMMON`(일반 repo)        | 표준 4개 선택지               | 정리할 worktree 없음  |
+| `GIT_DIR != GIT_COMMON`, 이름 있는 브랜치 | 표준 4개 선택지               | 출처 기반(6단계 참고) |
+| `GIT_DIR != GIT_COMMON`, detached HEAD    | 축소된 3개 선택지(merge 없음) | 정리 없음(외부 관리)  |
 
 ### 3단계: 기준 브랜치 결정
 
@@ -184,7 +184,7 @@ WORKTREE_PATH=$(git rev-parse --show-toplevel)
 
 **`GIT_DIR == GIT_COMMON`이면:** 일반 repo다. 정리할 worktree가 없다. 완료.
 
-**worktree 경로가 `.worktrees/`, `worktrees/`, `~/.config/superpowers/worktrees/` 아래라면:** Superpowers가 만든 worktree다. 정리 책임이 있다.
+**worktree 경로가 `.worktrees/`, `worktrees/` 아래라면:** Superpowers가 만든 worktree다. 정리 책임이 있다.
 
 ```bash
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
@@ -197,12 +197,12 @@ git worktree prune  # 자가 복구: 오래된 등록 정리
 
 ## 빠른 참조
 
-| 선택지 | Merge | Push | Worktree 유지 | 브랜치 정리 |
-| --- | --- | --- | --- | --- |
-| 1. 로컬 merge | 예 | - | - | 예 |
-| 2. PR 생성 | - | 예 | 예 | - |
-| 3. 그대로 유지 | - | - | 예 | - |
-| 4. 폐기 | - | - | - | 예(force) |
+| 선택지         | Merge | Push | Worktree 유지 | 브랜치 정리 |
+| -------------- | ----- | ---- | ------------- | ----------- |
+| 1. 로컬 merge  | 예    | -    | -             | 예          |
+| 2. PR 생성     | -     | 예   | 예            | -           |
+| 3. 그대로 유지 | -     | -    | 예            | -           |
+| 4. 폐기        | -     | -    | -             | 예(force)   |
 
 ## 흔한 실수
 
@@ -234,7 +234,7 @@ git worktree prune  # 자가 복구: 오래된 등록 정리
 **harness가 소유한 worktree 정리**
 
 - **문제:** harness가 만든 worktree를 제거하면 유령 상태가 생긴다.
-- **수정:** `.worktrees/`, `worktrees/`, `~/.config/superpowers/worktrees/` 아래 worktree만 정리한다.
+- **수정:** `.worktrees/`, `worktrees/` 아래 worktree만 정리한다.
 
 **폐기에 확인 없음**
 

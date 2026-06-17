@@ -13,9 +13,7 @@ description: 여러 단계로 된 작업에 대한 스펙이나 요구사항이 
 
 **시작할 때 알림:** "구현 계획을 만들기 위해 writing-plans 스킬을 사용합니다."
 
-**컨텍스트:** 격리된 worktree에서 작업한다면 실행 시점에 `superpowers:using-git-worktrees` 스킬로 만들어져 있어야 한다.
-
-**계획 저장 위치:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**계획 저장 위치:** `docs/tmp/YYYY-MM-DD-<feature-name>.md`
 
 - 계획 위치에 대한 사용자 선호가 있으면 이 기본값보다 우선한다.
 
@@ -122,7 +120,7 @@ git commit -m "feat: add specific feature"
 - 항상 정확한 파일 경로
 - 모든 단계에 완전한 코드. 단계가 코드를 바꾸면 그 코드를 보여준다.
 - 예상 출력이 포함된 정확한 명령
-- DRY, YAGNI, TDD, 잦은 커밋
+- DRY, YAGNI, 잦은 커밋
 
 ## 자기 검토
 
@@ -140,7 +138,7 @@ git commit -m "feat: add specific feature"
 
 계획을 저장한 뒤 실행 방식을 제안한다:
 
-**"`docs/plans/<filename>.md`에 계획을 저장했습니다. 실행 방식은 두 가지입니다:**
+**"`docs/tmp/<filename>.md`에 계획을 저장했습니다. 실행 방식은 두 가지입니다:**
 
 **1. Subagent-Driven(권장)** - 작업마다 새 서브에이전트를 파견하고 작업 사이 리뷰를 수행해 빠르게 반복
 

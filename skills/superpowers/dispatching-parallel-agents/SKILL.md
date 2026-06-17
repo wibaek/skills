@@ -70,10 +70,10 @@ digraph when_to_use {
 ### 3. 병렬 파견
 
 ```typescript
-// Claude Code / AI 환경
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+// AI 환경
+Task("Fix agent-tool-abort.test.ts failures");
+Task("Fix batch-completion-behavior.test.ts failures");
+Task("Fix tool-approval-race-conditions.test.ts failures");
 // 세 작업은 모두 동시에 실행된다
 ```
 

@@ -96,7 +96,7 @@ async function gitInit(directory: string) {
 **실행 및 캡처:**
 
 ```bash
-npm test 2>&1 | grep 'DEBUG git init'
+pnpm test 2>&1 | grep 'DEBUG git init'
 ```
 
 **stack trace 분석:**

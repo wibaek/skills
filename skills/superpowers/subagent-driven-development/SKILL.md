@@ -133,7 +133,7 @@ digraph process {
 ```text
 You: 이 계획을 실행하기 위해 Subagent-Driven Development를 사용합니다.
 
-[계획 파일을 한 번 읽음: docs/superpowers/plans/feature-plan.md]
+[계획 파일을 한 번 읽음: docs/tmp/feature-plan.md]
 [전체 텍스트와 컨텍스트가 포함된 5개 작업 추출]
 [모든 작업으로 TodoWrite 생성]
 
@@ -280,14 +280,9 @@ Final reviewer: 모든 요구사항 충족, merge 준비 완료
 
 **필수 워크플로우 스킬:**
 
-- **superpowers:using-git-worktrees** - 격리된 작업공간을 보장한다. 새로 만들거나 기존 것을 확인한다.
 - **superpowers:writing-plans** - 이 스킬이 실행할 계획을 만든다.
 - **superpowers:requesting-code-review** - 리뷰어 서브에이전트용 코드 리뷰 템플릿
 - **superpowers:finishing-a-development-branch** - 모든 작업 후 개발 완료
-
-**서브에이전트가 사용해야 할 스킬:**
-
-- **superpowers:test-driven-development** - 서브에이전트가 각 작업에서 TDD를 따른다.
 
 **대안 워크플로우:**
 
