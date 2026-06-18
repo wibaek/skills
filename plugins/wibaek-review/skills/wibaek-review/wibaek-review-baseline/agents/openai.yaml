@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Baseline"
+  short_description: "리뷰 기준과 저장소 의도 복원"
+  default_prompt: "Use $wibaek-review-baseline to establish repository intent and review invariants."

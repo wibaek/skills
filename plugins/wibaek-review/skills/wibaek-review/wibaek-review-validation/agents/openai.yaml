@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Validation"
+  short_description: "리뷰 후보 근거 기반 검증"
+  default_prompt: "Use $wibaek-review-validation to validate or reject review candidates with evidence."

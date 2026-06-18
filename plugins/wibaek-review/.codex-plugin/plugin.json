@@ -1,0 +1,39 @@
+{
+  "name": "wibaek-review",
+  "version": "0.1.0",
+  "description": "Engineering Review Workflows for Code, Architecture, and System Design",
+  "author": {
+    "name": "Wibaek Park",
+    "email": "devmuromi@gmail.com",
+    "url": "https://github.com/wibaek"
+  },
+  "homepage": "https://github.com/wibaek/skills",
+  "repository": "https://github.com/wibaek/skills",
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "architecture-review",
+    "system-design",
+    "diff-review",
+    "deep-review"
+  ],
+  "skills": "./skills/wibaek-review/",
+  "interface": {
+    "displayName": "Wibaek Review",
+    "shortDescription": "Architecture-first engineering review workflows",
+    "longDescription": "Wibaek Review packages reusable read-only workflows for lightweight diff review, architecture-first repository and system review, deep six-subagent review, validation, impact analysis, and final review reports.",
+    "developerName": "Wibaek Park",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read"],
+    "defaultPrompt": [
+      "Run a Wibaek Review on this repository.",
+      "Run a deep Wibaek Review on this repository.",
+      "Run a Wibaek Review on this PR, commit, branch diff, or working-tree patch."
+    ],
+    "websiteURL": "https://github.com/wibaek/skills",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "brandColor": "#8B5CF6",
+    "screenshots": []
+  }
+}
