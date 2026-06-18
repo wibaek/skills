@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Discovery"
+  short_description: "엔지니어링 리뷰 후보 발굴"
+  default_prompt: "Use $wibaek-review-discovery to discover evidence-backed engineering review candidates."

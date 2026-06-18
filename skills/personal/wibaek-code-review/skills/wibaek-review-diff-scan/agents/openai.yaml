@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Diff Scan"
+  short_description: "Git diff 기반 엔지니어링 리뷰"
+  default_prompt: "Use $wibaek-review-diff-scan to review this PR, commit, branch diff, or working-tree patch."

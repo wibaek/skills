@@ -34,7 +34,9 @@ npx skills add wibaek/skills
 | `git-commit-writer` | 실제 git diff를 바탕으로 Conventional Commit 메시지 작성과 commit workflow 수행 |
 | `github-pr-writer` | branch history, diff, 검증 결과를 바탕으로 GitHub PR 제목과 본문 작성 |
 | `benchmark-prd-scout` | 명시적으로 호출됐을 때만 제품/서비스 벤치마킹 결과를 PRD, 기능 목록, 백로그로 정리 |
+| `wibaek-review-diff-scan` / `wibaek-review-scan` / `wibaek-review-deep-scan` | `wibaek-code-review` 계열의 근거 기반 엔지니어링 리뷰 |
 | `adr-writer` | Paulo Merson 스타일의 간결한 ADR 작성 |
+| `ignore-file-writer` | 프로젝트 언어와 도구에 맞는 `.gitignore`, `.dockerignore` 생성과 보강 |
 
 ### 기술 표준
 
@@ -48,7 +50,6 @@ npx skills add wibaek/skills
 
 | 스킬 | 용도 |
 | --- | --- |
-| `using-superpowers` | 대화 시작 시 적용할 스킬을 찾고 우선순위를 정하는 기본 규칙 |
 | `brainstorming` | 기능 생성, 동작 변경, 설계 작업 전에 의도와 요구사항 정리 |
 | `using-git-worktrees` | 현재 작업공간과 격리된 기능 작업 환경 구성 |
 | `writing-plans` | 여러 단계 작업을 실행 가능한 계획으로 분해 |
@@ -71,6 +72,7 @@ skills/
   personal/      개인 workflow와 project setup 선호
   general/       재사용 가능한 기술 표준과 guideline
   superpowers/   process 중심 workflow skill
+deprecated/      기본 설치에서 제외한 archived skill
 ```
 
 각 스킬은 필요에 따라 다음 파일과 디렉터리를 포함한다.
@@ -81,3 +83,5 @@ skills/
 | `assets/` | template file과 configuration 예시 |
 | `references/` | 보조 문서와 참고 자료 |
 | `scripts/` | 자동화를 위한 helper script |
+
+`deprecated/` 아래 파일은 설치 대상이 되지 않도록 `SKILL.md` 대신 `SKILL.deprecated.md`를 사용한다.

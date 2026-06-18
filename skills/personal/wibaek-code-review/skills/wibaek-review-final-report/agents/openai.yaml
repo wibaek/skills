@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Final Report"
+  short_description: "최종 리뷰 리포트 조립"
+  default_prompt: "Use $wibaek-review-final-report to assemble the final engineering review report."

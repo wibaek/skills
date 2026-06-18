@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Impact Analysis"
+  short_description: "리뷰 finding 영향도 보정"
+  default_prompt: "Use $wibaek-review-impact-analysis to calibrate engineering review priority and impact."

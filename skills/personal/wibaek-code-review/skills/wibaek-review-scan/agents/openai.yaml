@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wibaek Review Scan"
+  short_description: "저장소·경로 엔지니어링 리뷰"
+  default_prompt: "Use $wibaek-review-scan to review this repository, path, module, design doc, or ADR."
