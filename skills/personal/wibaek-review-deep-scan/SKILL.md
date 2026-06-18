@@ -43,12 +43,15 @@ final report가 작성 또는 final response에 포함되어야 한다.
 가능하면 multi-agent 또는 subagent tool로 정확히 6개 subagent를 명시적으로 호출한다.
 각 subagent는 동일한 target, baseline, worklist를 받고 자신에게 배정된 관점의 candidate만 낸다.
 
-1. correctness and data flow
-2. architecture boundaries and dependency direction
-3. API, schema, and external contract
-4. data model, migration, and state consistency
-5. performance, reliability, and operability
-6. testing, maintainability, and change risk
+1. system architecture, module boundaries, and dependency direction
+2. domain model, data ownership, lifecycle invariant, and state consistency
+3. integration architecture: API, schema, external contract, event, job, batch, CLI
+4. correctness, edge case, and request/data flow
+5. performance, reliability, operability, migration, and rollback
+6. testing strategy, maintainability, change risk, and abstraction fit
+
+1-3번 lane은 line-local bug보다 architecture/system design 후보를 먼저 찾아야 한다.
+4-6번 lane도 code finding만 내지 말고 자신이 본 architecture surface의 outcome을 적는다.
 
 subagent tool을 사용할 수 없으면 deep review라고 주장하지 않는다.
 사용자에게 capability 부재를 말하고 ordinary `wibaek-review-scan`으로 fallback할지 확인한다.

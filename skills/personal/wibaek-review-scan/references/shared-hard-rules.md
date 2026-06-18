@@ -4,6 +4,8 @@ mode별 guidance보다 먼저 이 규칙을 적용한다.
 
 - workflow별 단계 경계를 보이게 유지한다. diff scan은 diff target, supporting context, evidence check, final review로 충분하다. repository/scoped scan과 deep review는 baseline, discovery, validation, impact analysis, final report 경계를 유지한다.
 - repository/scoped scan과 deep review entrypoint는 goal tool이 사용 가능할 때 Codex goal을 만들거나 채택해야 하며, 관련 worklist, candidate, coverage, final report receipt가 닫히기 전에 complete하면 안 된다. diff scan mode는 goal을 사용하지 않는다.
+- `wibaek-review-scan`과 `wibaek-review-deep-scan`은 code-only bug list로 끝내지 않는다. architecture/system design review outcome을 final report에 남긴다.
+- architecture/system finding은 단일 line에 고정하지 않아도 된다. affected surface, representative files, dependency edge, runtime flow를 evidence로 사용할 수 있다.
 - finding을 내기 전에 diff evidence, repository evidence, design authority 중 해당하는 근거를 확인한다.
 - discovery candidate를 validated finding처럼 제시하지 않는다.
 - validation evidence와 구체적 failure path 없이 P0/P1을 부여하지 않는다.

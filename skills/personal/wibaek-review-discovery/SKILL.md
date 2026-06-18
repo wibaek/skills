@@ -11,6 +11,7 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 
 - 실제 파일 또는 문서 evidence를 본 뒤 후보를 만든다.
 - commit message, PR title, 문서의 주장보다 실제 diff/code/doc structure를 신뢰한다.
+- `wibaek-review-scan`과 `wibaek-review-deep-scan`에서는 line-local bug 후보보다 architecture/system design 후보를 먼저 훑는다.
 - candidate는 broken invariant 또는 concrete risk path를 가져야 한다.
 - source, root control, impact sink가 다르면 후보를 나눈다.
 - 같은 category라는 이유만으로 다른 instance를 합치지 않는다.
@@ -22,6 +23,12 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 
 찾을 수 있는 후보 family:
 
+- system decomposition, runtime boundary, ownership ambiguity
+- layer rule violation, dependency inversion, dependency cycle
+- bounded-context leak, domain invariant split, abstraction mismatch
+- data ownership, lifecycle mismatch, migration and rollback architecture
+- integration boundary drift across API, event, job, batch, CLI
+- operational architecture gap: retry, idempotency, backpressure, observability
 - business logic, edge case, state transition
 - transaction boundary, idempotency, concurrency
 - API contract, schema evolution, backward compatibility

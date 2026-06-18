@@ -1,4 +1,4 @@
 interface:
   display_name: "Wibaek Review Scan"
-  short_description: "저장소·경로 엔지니어링 리뷰"
-  default_prompt: "Use $wibaek-review-scan to review this repository, path, module, design doc, or ADR."
+  short_description: "architecture-first 저장소·시스템 리뷰"
+  default_prompt: "Use $wibaek-review-scan to run an architecture-first codebase, system design, architecture design, path, module, design doc, or ADR review."

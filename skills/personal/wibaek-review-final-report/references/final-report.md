@@ -17,12 +17,47 @@ diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report
 ## Baseline
 <declared intent, inferred conventions, architecture/runtime summary>
 
+## Architecture / System Design Review
+
+| Surface | Evidence | Outcome |
+| --- | --- | --- |
+| runtime boundaries |  |  |
+| module/service ownership |  |  |
+| dependency direction |  |  |
+| domain/data lifecycle |  |  |
+| integration boundaries |  |  |
+| operational architecture |  |  |
+
+<surviving architecture findings, rejected candidates, deferred areas, or no-finding rationale>
+
 ## findings 요약
 
 | ID | 우선순위 | 신뢰도 | Category | 제목 |
 | --- | --- | --- | --- | --- |
 
-## Findings
+## Architecture / System Findings
+
+### [A1] <title>
+
+| Field | Value |
+| --- | --- |
+| 우선순위 | P1 |
+| 신뢰도 | medium |
+| Category | architecture-boundary |
+| Authority | declared_invariant |
+| Affected surfaces | module boundary, dependency edge, runtime flow |
+| Validation | import graph + runtime flow trace |
+
+#### 요약
+#### Evidence
+#### Validation
+#### Impact Path
+#### Counterevidence
+#### Recommendation
+#### 최소 수정
+#### 테스트 계획
+
+## Code / Behavior Findings
 
 ### [1] <title>
 
@@ -56,6 +91,9 @@ diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report
 
 - priority 순서로 정렬한다: P0, P1, P2, P3, Info.
 - 일반 summary prose보다 finding을 먼저 둔다.
+- review-scan/deep-scan은 architecture/system design review section을 findings보다 먼저 둔다.
+- architecture/system finding은 단일 line reference가 없어도 된다. 대신 affected surface, representative files, dependency edge, runtime flow를 적는다.
+- architecture finding이 없으면 no-finding rationale 또는 deferred architecture surface를 적는다.
 - rejected candidate를 finding으로 포함하지 않는다. 유용하면 reviewed surfaces에 둔다.
 - proof gap을 명시한다.
 - "code smell"이 아니라 concrete category를 사용한다.

@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-scan
-description: Review an entire codebase, scoped code area, system design, architecture design, ADR, RFC, or design doc for engineering risks. Use for broad code/system/architecture reviews, not ordinary Git-only diffs.
+description: Architecture-first review for an entire codebase, scoped code area, system design, architecture design, ADR, RFC, or design doc. Use for broad code/system/architecture reviews, not ordinary Git-only diffs.
 ---
 
 # Review Scan
@@ -18,6 +18,23 @@ ordinary PR diff feedback에는 `wibaek-review-diff-scan`을 사용한다.
 5. `wibaek-review-final-report`
 
 phase를 합치지 않는다. 모든 in-scope surface를 다 봤다고 주장하려면 coverage artifact가 있어야 한다.
+
+## Architecture-First Rule
+
+`wibaek-review-scan`은 file-level bug hunt가 아니라 전체 코드, 시스템 디자인, 아키텍처 디자인 리뷰다.
+구체적인 코드 finding을 찾기 전에 먼저 architecture baseline을 만든다.
+
+최소 architecture pass:
+
+- system decomposition과 runtime boundary를 그린다.
+- module/package/service ownership을 구분한다.
+- dependency direction과 layer rule을 확인한다.
+- domain model, data ownership, lifecycle invariant를 확인한다.
+- API, event, job, batch, CLI 같은 integration boundary를 확인한다.
+- deployment, migration, observability, rollback 같은 operational architecture를 확인한다.
+
+최종 report에는 architecture/system design review section이 있어야 한다.
+surviving architecture finding이 없으면 어떤 architecture surface를 봤고 왜 finding으로 남기지 않았는지 적는다.
 
 ## Goal Setup
 
@@ -61,7 +78,11 @@ scope가 한 번에 너무 크면 runtime surface 또는 module 단위로 나누
 
 우선순위:
 
+- system decomposition and runtime boundary
 - architecture boundaries and dependency direction
+- domain model, ownership, and lifecycle invariant
+- integration boundary across API, event, job, batch, CLI
+- deployment, migration, rollback, and observability architecture
 - runtime entrypoints
 - public API and SDK surfaces
 - migrations and schema boundaries
@@ -100,6 +121,8 @@ Outcome:
 - dramatic candidate 하나에 전체 리뷰를 소모하지 않는다. 다른 high-impact surface도 확인한다.
 - independently fixable repeated problematic instance는 보존한다.
 - broad architecture complaint보다 concrete entrypoint/control/sink evidence를 선호한다.
+- architecture finding은 단일 line에 고정되지 않아도 된다. 여러 file, dependency edge, data flow, runtime boundary를 evidence로 묶을 수 있다.
+- 모든 surviving finding이 file-level bug면 final report에서 architecture pass outcome을 별도로 설명한다.
 - maintainability finding은 concrete change amplification 또는 inconsistency cost를 보여줘야 한다.
 
 ## Hard Rules

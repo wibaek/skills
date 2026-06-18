@@ -57,16 +57,17 @@ worker 하나에서만 나온 candidate도 다음 조건이면 살아남을 수 
 
 deep review는 다음 6개 lane의 서로 다른 brief를 사용한다.
 
-- correctness and data flow
-- architecture boundaries and dependency direction
-- API, schema, and external contract
-- data model, migration, and state consistency
-- performance, reliability, and operability
-- testing, maintainability, and change risk
+- system architecture, module boundaries, and dependency direction
+- domain model, data ownership, lifecycle invariant, and state consistency
+- integration architecture: API, schema, external contract, event, job, batch, CLI
+- correctness, edge case, and request/data flow
+- performance, reliability, operability, migration, and rollback
+- testing strategy, maintainability, change risk, and abstraction fit
 
 six-subagent fanout을 사용할 때:
 
 - 각 candidate에 source lane을 표시한다.
+- architecture lane candidate는 단일 line보다 affected surface와 representative evidence를 우선한다.
 - title 또는 category만으로 lane 간 candidate를 merge하지 않는다.
 - 같은 candidate schema를 요구한다.
 - merge 이후 validation과 priority calibration을 중앙에서 수행한다.
