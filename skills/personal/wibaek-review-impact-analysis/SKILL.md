@@ -57,7 +57,7 @@ Low irreversibility:
 
 ## Priority Calibration
 
-`../../references/authority-and-priority-policy.md`를 먼저 적용한다.
+`references/authority-and-priority-policy.md`를 먼저 적용한다.
 
 - path가 validated, central, irreversible, likely하면 올린다.
 - path가 speculative, isolated, reversible, mitigated면 낮춘다.

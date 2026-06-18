@@ -21,7 +21,7 @@ phase를 합치지 않는다. 모든 in-scope surface를 다 봤다고 주장하
 
 ## Goal Setup
 
-standard 또는 deep repository, scoped path, module, service boundary, 또는 document review 작업 전에 `../../references/goal-setup.md`의 `wibaek-review-scan` objective로 Codex goal을 생성하거나 호환되는 active goal을 이어받는다. 작은 scoped/document quick review에서는 goal이 필요 없다.
+standard 또는 deep repository, scoped path, module, service boundary, 또는 document review 작업 전에 `references/goal-setup.md`의 `wibaek-review-scan` objective로 Codex goal을 생성하거나 호환되는 active goal을 이어받는다. 작은 scoped/document quick review에서는 goal이 필요 없다.
 
 goal을 사용하는 standard/deep mode에서는 모든 in-scope file, surface, document section, 또는 worklist row가 completion receipt나 명시적 deferred closure를 가져야 하고, discovery candidate는 validation 및 impact analysis receipt 또는 rejected/deferred reason을 가져야 하며, final report가 작성 또는 final response에 포함되어야 한다.
 
@@ -104,4 +104,4 @@ Outcome:
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.

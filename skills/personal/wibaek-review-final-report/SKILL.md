@@ -6,6 +6,7 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 # Final Review Report
 
 모든 review mode에서 같은 report shape로 수렴한다.
+report format은 `references/final-report.md`를 따른다.
 
 ## Workflow
 
@@ -14,11 +15,11 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 3. 각 finding에 evidence, validation, impact path, counterevidence, recommendation을 채운다.
 4. rejected/deferred surface는 Reviewed Surfaces에 남긴다.
 5. Codex runtime이 code review directive를 지원할 때만 actionable finding마다 `::code-comment` directive를 만든다. 지원하지 않으면 normal markdown finding과 file/line reference를 출력한다.
-6. report path가 필요한 경우 `../../references/artifact-paths.md`의 final output path에 markdown report를 쓴다.
+6. report path가 필요한 경우 `references/artifact-paths.md`의 final output path에 markdown report를 쓴다.
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.
 
 - rejected candidate를 finding으로 포함하지 않는다.
 - proof gap을 숨기지 않는다.

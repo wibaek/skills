@@ -80,4 +80,4 @@ repository guidance를 먼저 따른다. 일반적으로 고려할 명령:
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.

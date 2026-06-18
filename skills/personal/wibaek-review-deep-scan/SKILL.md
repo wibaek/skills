@@ -22,7 +22,7 @@ description: Run wibaek-review-scan plus six explicit subagents for deep enginee
 
 ## Goal Setup
 
-실질적인 deep review 작업 전에 `../../references/goal-setup.md`의 `wibaek-review-deep-scan` objective로 Codex goal을 생성하거나 호환되는 active goal을 이어받는다.
+실질적인 deep review 작업 전에 `references/goal-setup.md`의 `wibaek-review-deep-scan` objective로 Codex goal을 생성하거나 호환되는 active goal을 이어받는다.
 
 goal을 완료하려면 6개 subagent lane의 output 또는 capability blocker가 기록되어야 하고,
 canonical candidate는 validation 및 impact analysis receipt 또는 rejected/deferred reason을 가져야 하며,
@@ -35,7 +35,7 @@ final report가 작성 또는 final response에 포함되어야 한다.
 3. subagent output은 raw candidate로만 보존하고 즉시 finding으로 승격하지 않는다.
 4. `references/semantic-merge.md`로 raw candidate를 canonical candidate set으로 병합한다.
 5. canonical candidate set을 `wibaek-review-validation`으로 중앙 검증한다.
-6. `wibaek-review-impact-analysis`와 `../../references/authority-and-priority-policy.md`로 priority를 중앙 보정한다.
+6. `wibaek-review-impact-analysis`와 `references/authority-and-priority-policy.md`로 priority를 중앙 보정한다.
 7. `wibaek-review-final-report`로 normal final report를 작성한다.
 
 ## Required Subagents
@@ -71,4 +71,4 @@ source, control, impact, fix가 다르면 별도 candidate로 유지한다.
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.

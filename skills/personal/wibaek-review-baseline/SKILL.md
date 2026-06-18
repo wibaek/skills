@@ -25,11 +25,11 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 4. declared intent와 inferred conventions를 분리해서 기록한다.
 5. inferred convention은 prevalence를 가능하면 수치로 적는다. 예: "47/52 service가 domain -> repository 방향을 따른다."
 6. declared intent와 inferred convention이 충돌하면 충돌 자체를 baseline finding 후보가 아니라 discovery input으로 남긴다.
-7. baseline artifact를 `../../references/artifact-paths.md`의 context path에 저장하거나, 파일 산출물이 필요 없는 작은 리뷰에서는 final report의 Baseline section에 남긴다.
+7. baseline artifact를 `references/artifact-paths.md`의 context path에 저장하거나, 파일 산출물이 필요 없는 작은 리뷰에서는 final report의 Baseline section에 남긴다.
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.
 
 - current diff만 보고 repository intent를 정하지 않는다.
 - 코드 다수가 하는 일을 자동으로 정답으로 취급하지 않는다.

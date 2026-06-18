@@ -35,7 +35,7 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 
 ## Output Contract
 
-각 후보는 `../../references/candidate-schema.md`의 canonical schema를 따른다.
+각 후보는 `references/candidate-schema.md`의 canonical schema를 따른다.
 
 필수:
 
@@ -57,7 +57,7 @@ description: Internal phase only for wibaek review workflows. Do not use as a to
 
 ## Hard Rules
 
-`../../references/shared-hard-rules.md`를 읽고 적용한다.
+`references/shared-hard-rules.md`를 읽고 적용한다.
 
 - discovery를 validation으로 바꾸지 않는다.
 - "좋은 설계가 아님"은 finding이 아니다. 어떤 invariant가 깨지는지 말한다.
