@@ -1,0 +1,41 @@
+# Node dependencies
+node_modules/
+.pnpm-store/
+
+# Package manager caches
+.npm/
+
+# Package manager debug logs
+.pnpm-debug.log*
+
+# Yarn Berry
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Build output
+dist/
+build/
+out/
+
+# Framework output
+.next/
+next-env.d.ts
+.vercel
+.nuxt/
+.svelte-kit/
+.astro/
+.vite/
+
+# Tool caches
+.turbo/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# TypeScript
+*.tsbuildinfo

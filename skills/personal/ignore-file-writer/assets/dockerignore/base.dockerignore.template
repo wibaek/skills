@@ -1,0 +1,46 @@
+# Git metadata
+.git
+.gitignore
+.gitattributes
+
+# Docker metadata
+.dockerignore
+compose.yaml
+compose.*.yaml
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS files: macOS
+.DS_Store
+._*
+
+# OS files: Windows
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE local state
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs and temporary files
+logs
+*.log
+tmp
+temp
+.tmp
+.temp
+
+# Test and coverage output
+coverage
+lcov.info
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db

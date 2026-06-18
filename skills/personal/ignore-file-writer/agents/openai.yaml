@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ignore File Writer"
+  short_description: "개인 취향의 gitignore/dockerignore 생성"
+  default_prompt: "$ignore-file-writer를 사용해 현재 프로젝트에 맞는 .gitignore와 .dockerignore를 생성하세요."

@@ -1,0 +1,70 @@
+# Local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local secrets and keys
+*.pem
+
+# OS files: macOS
+.DS_Store
+.DS_Store?
+._*
+
+# OS files: Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE: JetBrains
+.idea/
+
+# IDE: Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# Editor: Vim/Neovim swap files
+*.swp
+*.swo
+
+# Editor: backup files
+*~
+
+# AI tool local state
+.claude/settings.local.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime and temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+*.tmp
+*.temp
+*.pid
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+db.sqlite3-journal
+
+# Coverage and reports
+coverage/
+lcov.info
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
