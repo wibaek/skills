@@ -7,7 +7,7 @@
 ## 기본 경로
 
 - `repo_name=<basename of repo_root>`
-- `review_dir=/tmp/wibaek-code-review/<repo_name>/<scan_id>`
+- `review_dir=/tmp/wibaek-review/<repo_name>/<scan_id>`
 - `artifacts_dir=<review_dir>/artifacts`
 - `context_dir=<artifacts_dir>/01_context`
 - `worklist_dir=<artifacts_dir>/02_worklist`

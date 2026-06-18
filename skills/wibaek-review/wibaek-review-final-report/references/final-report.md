@@ -2,6 +2,17 @@
 
 diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report shape를 사용한다.
 
+## 최종 output
+
+최종 산출물은 다음 두 파일이다.
+
+- `<review_dir>/report.html`: primary readable report
+- `<review_dir>/report.md`: HTML 생성에 사용한 markdown source
+
+Codex final response는 전체 report를 다시 붙여 넣지 않고 `report.html`, `report.md`,
+finding count, 검증 제한 사항만 짧게 알려준다. 사용자가 명시적으로 콘솔 출력만 원하면
+artifact 생성을 생략할 수 있지만, repository/scoped/deep review에서는 기본값이 artifact 생성이다.
+
 ## report 구조
 
 ```markdown
@@ -12,10 +23,20 @@ diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report
 - target:
 - reviewed surfaces:
 - 실행한 command:
+- report artifacts:
 - 제한 사항:
 
 ## Baseline
 <declared intent, inferred conventions, architecture/runtime summary>
+
+## Review Receipt
+
+| Field | Value |
+| --- | --- |
+| Candidate count | raw: / canonical: / confirmed: / follow-up: / rejected: |
+| Validation methods |  |
+| Subagents |  |
+| Coverage status |  |
 
 ## Architecture / System Design Review
 
@@ -84,6 +105,11 @@ diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report
 | Surface | Risk Area | Outcome | Notes |
 | --- | --- | --- | --- |
 
+## Follow-up Candidates
+
+| ID | Source | Why not a finding | Proof gap | Next validation |
+| --- | --- | --- | --- | --- |
+
 ## 열린 질문 / follow-up
 ```
 
@@ -98,6 +124,13 @@ diff, repo, scoped, deep, architecture, design-doc review에서 하나의 report
 - proof gap을 명시한다.
 - "code smell"이 아니라 concrete category를 사용한다.
 - remediation은 최소 범위로 쓰고 broken invariant에 연결한다.
+- repository/scoped/deep review에서 confirmed finding이 0-2개면 `Review Receipt`와
+  `Follow-up Candidates`를 특히 명확히 쓴다. 리뷰가 적게 나온 이유를
+  "문제 없음"으로 뭉개지 말고, 어떤 후보가 왜 rejected/follow-up이 되었는지 남긴다.
+- candidate를 많이 찾았지만 reportable finding이 적다면 `finding 수를 줄인 근거`를
+  Review Receipt 또는 Follow-up Candidates에 쓴다.
+- weak candidate를 finding 수 보충용으로 승격하지 않는다. reportable하지 않은 후보는
+  proof gap과 next validation이 있는 follow-up으로 남긴다.
 
 ## reviewed surface outcome
 

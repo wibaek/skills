@@ -34,9 +34,21 @@ npx skills add wibaek/skills
 | `git-commit-writer` | 실제 git diff를 바탕으로 Conventional Commit 메시지 작성과 commit workflow 수행 |
 | `github-pr-writer` | branch history, diff, 검증 결과를 바탕으로 GitHub PR 제목과 본문 작성 |
 | `benchmark-prd-scout` | 명시적으로 호출됐을 때만 제품/서비스 벤치마킹 결과를 PRD, 기능 목록, 백로그로 정리 |
-| `wibaek-review-diff-scan` / `wibaek-review-scan` / `wibaek-review-deep-scan` | `wibaek-code-review` 계열의 근거 기반 엔지니어링 리뷰 |
 | `adr-writer` | Paulo Merson 스타일의 간결한 ADR 작성 |
 | `ignore-file-writer` | 프로젝트 언어와 도구에 맞는 `.gitignore`, `.dockerignore` 생성과 보강 |
+
+### Wibaek Review
+
+| 스킬 | 용도 |
+| --- | --- |
+| `wibaek-review-diff-scan` | PR, commit, branch diff, working-tree patch를 가볍게 리뷰 |
+| `wibaek-review-scan` | 전체 코드, 시스템 디자인, 아키텍처 디자인을 architecture-first로 리뷰 |
+| `wibaek-review-deep-scan` | `wibaek-review-scan`에 6개 subagent 관점을 더한 deep review |
+| `wibaek-review-baseline` | 리뷰 기준이 되는 intent, convention, architecture context 복원 |
+| `wibaek-review-discovery` | evidence-backed review candidate 발굴 |
+| `wibaek-review-validation` | candidate를 테스트, trace, graph, scenario로 검증 또는 반증 |
+| `wibaek-review-impact-analysis` | failure path와 blast radius 기준으로 priority 보정 |
+| `wibaek-review-final-report` | architecture/system finding과 code finding을 최종 report로 조립 |
 
 ### 기술 표준
 
@@ -68,9 +80,11 @@ npx skills add wibaek/skills
 ## 구조
 
 ```text
+.codex-plugin/  Codex plugin manifest
 skills/
   personal/      개인 workflow와 project setup 선호
   general/       재사용 가능한 기술 표준과 guideline
+  wibaek-review/ architecture-first engineering review workflow
   superpowers/   process 중심 workflow skill
 deprecated/      기본 설치에서 제외한 archived skill
 ```

@@ -7,7 +7,7 @@
 ## 기본 경로
 
 - `repo_name=<basename of repo_root>`
-- `review_dir=/tmp/wibaek-code-review/<repo_name>/<scan_id>`
+- `review_dir=/tmp/wibaek-review/<repo_name>/<scan_id>`
 - `artifacts_dir=<review_dir>/artifacts`
 - `context_dir=<artifacts_dir>/01_context`
 - `worklist_dir=<artifacts_dir>/02_worklist`
@@ -65,6 +65,21 @@ coverage artifact는 finding 목록이 아니다. reported, rejected, not applic
 
 ## 최종 output
 
-- markdown report: `<review_dir>/report.md`
-- optional HTML report: `<review_dir>/report.html`
+- primary HTML report: `<review_dir>/report.html`
+- markdown report source: `<review_dir>/report.md`
 - report validation notes: `<review_dir>/report_validation.md`
+
+`report.html`이 사람이 읽는 기본 entry point다. final response에는 HTML path를 먼저 쓰고,
+markdown source path를 보조로 쓴다.
+
+## report generation
+
+`wibaek-review-final-report` skill directory를 `<skill_dir>`라고 할 때 기본 pipeline은 다음 순서다.
+
+```bash
+uv run python <skill_dir>/scripts/validate_review_report.py --report-md <review_dir>/report.md
+uv run python <skill_dir>/scripts/render_review_report_html.py --report-md <review_dir>/report.md --report-html <review_dir>/report.html --title "<repo_or_target> Engineering Review"
+```
+
+검증 또는 렌더링이 실패하면 실패 output을 `<review_dir>/report_validation.md`에 기록한다.
+artifact 생성을 완료하지 못했으면 final response에서 HTML report가 없다고 명확히 말한다.
