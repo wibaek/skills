@@ -32,7 +32,9 @@ npx skills add wibaek/skills
 
 ```text
 skills/
-  general/       재사용 가능한 기술 표준과 guideline
+  api-error-standard/
+  oauth2-standard/
+  rest-api-guidelines/
 ```
 
 각 스킬은 필요에 따라 다음 파일과 디렉터리를 포함한다.
