@@ -1,4 +1,0 @@
-interface:
-  display_name: "Wibaek Review Final Report"
-  short_description: "Wibaek Review 내부 report 단계"
-  default_prompt: "Use $wibaek-review-final-report only inside an active Wibaek Review scan to assemble the final report."

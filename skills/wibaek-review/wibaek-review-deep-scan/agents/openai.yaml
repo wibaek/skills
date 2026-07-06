@@ -1,4 +1,0 @@
-interface:
-  display_name: "Wibaek Review Deep Scan"
-  short_description: "명시 호출 전용 Wibaek Review deep scan"
-  default_prompt: "Use $wibaek-review-deep-scan to run an explicitly requested deep Wibaek Review scan."

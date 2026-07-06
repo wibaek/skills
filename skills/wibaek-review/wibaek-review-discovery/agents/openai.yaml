@@ -1,4 +1,0 @@
-interface:
-  display_name: "Wibaek Review Discovery"
-  short_description: "Wibaek Review 내부 discovery 단계"
-  default_prompt: "Use $wibaek-review-discovery only inside an active Wibaek Review scan to discover review candidates."
