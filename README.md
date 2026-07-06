@@ -80,7 +80,6 @@ npx skills add wibaek/skills
 ## 구조
 
 ```text
-.codex-plugin/  Codex plugin manifest
 skills/
   personal/      개인 workflow와 project setup 선호
   general/       재사용 가능한 기술 표준과 guideline
