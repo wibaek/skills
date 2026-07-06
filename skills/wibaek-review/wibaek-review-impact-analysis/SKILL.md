@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-impact-analysis
-description: Internal phase only for wibaek review workflows. Do not use as a top-level review entrypoint. Calibrates priority and confidence from failure path, blast radius, counterevidence, irreversibility, and leverage.
+description: Wibaek Review internal phase. Use only when an already-running wibaek-review-scan or wibaek-review-deep-scan workflow explicitly requests the impact-analysis phase. Do not invoke directly from user requests.
 ---
 
 # Impact Analysis

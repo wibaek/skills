@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-validation
-description: Internal phase only for wibaek review workflows. Do not use as a top-level review entrypoint. Validates or rejects discovered review candidates with tests, traces, typechecks, graphs, or scenario evidence.
+description: Wibaek Review internal phase. Use only when an already-running wibaek-review-scan or wibaek-review-deep-scan workflow explicitly requests the validation phase. Do not invoke directly from user requests.
 ---
 
 # Review Validation

@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-scan
-description: Architecture-first review for an entire codebase, scoped code area, system design, architecture design, ADR, RFC, or design doc. Use for broad code/system/architecture reviews, not ordinary Git-only diffs.
+description: Wibaek Review explicit entrypoint for repository, scoped path, module, system design, architecture design, ADR, RFC, or design doc scan. Use only when the user says Wibaek Review or explicitly names wibaek-review-scan.
 ---
 
 # Review Scan

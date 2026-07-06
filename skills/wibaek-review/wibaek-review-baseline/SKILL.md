@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-baseline
-description: Internal phase only for wibaek review workflows. Do not use as a top-level review entrypoint. Restores declared intent, conventions, architecture/runtime context, quality priorities, and review invariants.
+description: Wibaek Review internal phase. Use only when an already-running wibaek-review-scan or wibaek-review-deep-scan workflow explicitly requests the baseline phase. Do not invoke directly from user requests.
 ---
 
 # Review Baseline

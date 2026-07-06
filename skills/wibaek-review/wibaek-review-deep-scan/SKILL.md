@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-deep-scan
-description: Run wibaek-review-scan plus six explicit subagents for deep engineering review. Use when the user explicitly asks for deep, exhaustive, multi-perspective, multi-agent, or high-confidence review.
+description: Wibaek Review explicit entrypoint for deep six-subagent scan. Use only when the user says Wibaek Review deep scan, deep/exhaustive Wibaek Review, or explicitly names wibaek-review-deep-scan.
 ---
 
 # Review Deep Scan

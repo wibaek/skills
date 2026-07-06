@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-final-report
-description: Internal phase only for wibaek review workflows. Do not use as a top-level review entrypoint. Assembles validated findings into markdown reports, PR comments, and Codex code-comment directives when supported.
+description: Wibaek Review internal phase. Use only when an already-running wibaek-review-scan or wibaek-review-deep-scan workflow explicitly requests the final-report phase. Do not invoke directly from user requests.
 ---
 
 # Final Review Report

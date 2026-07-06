@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-diff-scan
-description: Lightweight review for Git diffs, PRs, commits, branch diffs, staged changes, or working-tree patches. Use for ordinary PR feedback focused on changed code, not repository-wide or architecture reviews.
+description: Wibaek Review explicit entrypoint for PR, commit, branch diff, staged change, or working-tree patch scan. Use only when the user says Wibaek Review on a diff or explicitly names wibaek-review-diff-scan.
 ---
 
 # Review Diff Scan

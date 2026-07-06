@@ -1,6 +1,6 @@
 ---
 name: wibaek-review-discovery
-description: Internal phase only for wibaek review workflows. Do not use as a top-level review entrypoint. Discovers evidence-backed engineering review candidates from a baseline and worklist.
+description: Wibaek Review internal phase. Use only when an already-running wibaek-review-scan or wibaek-review-deep-scan workflow explicitly requests the discovery phase. Do not invoke directly from user requests.
 ---
 
 # Review Discovery
