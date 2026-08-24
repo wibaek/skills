@@ -185,9 +185,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.version_tag }}
 
       - name: Create Head closing tag and exact Release
         env:
+          GH_TOKEN: ${{ github.token }}
           HEAD: ${{ needs.resolve_candidate.outputs.head }}
           VERSION: ${{ needs.resolve_candidate.outputs.version }}
           SOURCE_SHA: ${{ needs.resolve_candidate.outputs.source_sha }}
