@@ -10,10 +10,11 @@
 version 확정
 -> immutable artifact build·publish
 -> version + source revision + digest 기록
+-> 정확한 HeadVer Git tag 생성
 -> staging에 digest 배포
 -> 검증 또는 승인
 -> production에 같은 digest 배포
--> tag·Release metadata 기록
+-> Head 종료 Git tag + Release metadata 기록
 ```
 
 다음 조건을 유지한다.
@@ -24,7 +25,10 @@ version 확정
 - rerun 시 artifact가 없으면 같은 Build로 최초 게시할 수 있다.
 - rerun 시 artifact가 있으면 source revision을 검증하고 기존 digest를 재사용한다.
 - artifact 상태를 확인할 수 없거나 같은 version이 다른 revision을 가리키면 실패한다.
-- production 이후 tag·Release만 실패했다면 기존 metadata만 복구한다.
+- 정확한 HeadVer tag는 staging candidate의 commit을 가리키며 이동시키지 않는다.
+- production 성공 후 Head 종료 tag 하나를 같은 commit에 추가한다. 이 tag는 Git history 탐색용 metadata이며 배포나 artifact 조회에 사용하지 않는다.
+- Head 종료 tag가 이미 있으면 해당 Head는 닫힌 것으로 보고 새 candidate 생성을 거부한다.
+- tag·Release만 실패했다면 기존 version, source revision과 digest를 검증하고 누락된 metadata만 복구한다.
 
 Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 artifact-producing workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
 
@@ -43,7 +47,7 @@ image-reference = ghcr.io/owner/app@sha256:...
 image-digest    = sha256:...
 ```
 
-`ssh-compose-vps-deploy.yaml@v1.0`은 `image-reference`를 입력으로 받으므로 staging과 production job에 같은 output을 전달한다. HeadVer tag와 build tag를 함께 발행하면 full version과 `artifact + build` 중복을 각각 검사할 근거가 생긴다.
+`ssh-compose-vps-deploy.yaml@v1.0`은 `image-reference`를 입력으로 받으므로 staging과 production job에 같은 output을 전달한다. HeadVer image tag와 build image tag를 함께 발행하면 full version과 `artifact + build` 중복을 각각 검사할 근거가 생긴다.
 
 현재 GHCR reusable workflow는 실행될 때마다 build·push하며 기존 artifact를 조회해 resume하는 기능은 제공하지 않는다. 따라서 아래 호환 예시는 caller의 `prepare`와 `docker` job에서 `github.run_attempt != 1`인 artifact publish를 차단한다. 게시 전 실패한 rerun을 같은 Build로 허용하려면 reusable workflow 앞에 registry lookup·claim adapter를 추가하거나 `wibaek/gha`에 resume output을 구현해야 한다.
 
@@ -69,6 +73,7 @@ jobs:
       contents: read
       packages: read
     outputs:
+      head: ${{ steps.headver.outputs.head }}
       version: ${{ steps.headver.outputs.version }}
       build: ${{ steps.headver.outputs.build }}
     steps:
@@ -88,9 +93,10 @@ jobs:
       - name: Check immutable tags before publish
         env:
           GH_TOKEN: ${{ github.token }}
+          HEAD: ${{ steps.headver.outputs.head }}
           VERSION: ${{ steps.headver.outputs.version }}
           BUILD: ${{ steps.headver.outputs.build }}
-        run: ./scripts/assert-headver-tags-available.sh "$VERSION" "$BUILD"
+        run: ./scripts/assert-headver-tags-available.sh "$HEAD" "$VERSION" "$BUILD"
 
   docker:
     needs: prepare
@@ -108,8 +114,25 @@ jobs:
         type=raw,value=${{ needs.prepare.outputs.version }}
         type=raw,value=build-${{ needs.prepare.outputs.build }}
 
+  candidate-metadata:
+    needs: [prepare, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout artifact source revision
+        uses: actions/checkout@v6
+
+      - name: Create immutable HeadVer candidate tag
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          DIGEST: ${{ needs.docker.outputs.image-digest }}
+          IMAGE_REFERENCE: ${{ needs.docker.outputs.image-reference }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: ./scripts/ensure-headver-candidate-tag.sh
+
   deploy-staging:
-    needs: docker
+    needs: [docker, candidate-metadata]
     uses: wibaek/gha/.github/workflows/ssh-compose-vps-deploy.yaml@v1.0
     permissions:
       contents: read
@@ -154,7 +177,7 @@ jobs:
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_VPS_SSH_KNOWN_HOSTS }}
       RUNTIME_ENV: ${{ secrets.PRODUCTION_APP_ENV }}
 
-  release-metadata:
+  close-head:
     needs: [prepare, docker, deploy-production]
     runs-on: ubuntu-latest
     permissions:
@@ -163,20 +186,23 @@ jobs:
       - name: Checkout artifact source revision
         uses: actions/checkout@v6
 
-      - name: Create missing HeadVer tag and Release
+      - name: Create immutable Head closing tag and exact Release
         env:
+          HEAD: ${{ needs.prepare.outputs.head }}
           VERSION: ${{ needs.prepare.outputs.version }}
           DIGEST: ${{ needs.docker.outputs.image-digest }}
           IMAGE_REFERENCE: ${{ needs.docker.outputs.image-reference }}
           SOURCE_SHA: ${{ github.sha }}
-        run: ./scripts/ensure-headver-release.sh
+        run: ./scripts/ensure-headver-production-metadata.sh
 ```
+
+`candidate-metadata`는 예를 들어 정확한 Git tag `v5.2634.143`을 staging 전에 생성한다. production은 이 tag와 함께 기록된 기존 digest를 승격하며 tag에서 source를 다시 build하지 않는다. `close-head`는 production 성공 후 같은 commit에 `v5` 같은 Head 종료 tag 하나만 추가하고 GitHub Release는 정확한 `v5.2634.143` tag에 연결한다. 종료 tag는 사람이 Git history에서 해당 Head의 production 확정 지점을 찾기 위한 표식이며 workflow input이나 registry image tag로 사용하지 않는다. 종료 tag가 이미 같은 commit을 가리키면 성공으로 처리하고, 다른 commit을 가리키면 force update하지 않고 실패한다.
 
 현재 `v1.0`의 VPS deploy workflow에는 `environment`와 `concurrency-group` input이 없다. 따라서 예시는 caller의 `approve-production` job에 `production` GitHub Environment를 연결하고 workflow-level concurrency로 `my-app` release 전체를 직렬화한다. GitHub Actions는 같은 concurrency group에 실행 중인 run 하나와 대기 중인 run 하나만 유지하므로, 여러 artifact가 있는 repository에서는 artifact마다 group suffix를 다르게 지정한다. `main`에만 있는 신규 input을 `@v1.0` 호출에 넘기지 않는다. 해당 input이 새 release tag에 포함되면 called workflow의 environment와 concurrency를 직접 사용할 수 있다.
 
 `production` GitHub Environment에 required reviewer를 설정하면 승인 대기 중에도 image digest는 바뀌지 않는다. runtime secret은 image build argument로 넣지 않고 각 deploy job의 `RUNTIME_ENV`로 전달한다.
 
-`wibaek/gha/.github/workflows/release.yaml@v1.0`은 release-please와 SemVer release PR을 위한 workflow다. HeadVer production tag·GitHub Release 생성이나 부분 실패 복구에 그대로 사용하지 않는다. `release-metadata`는 artifact manifest의 version, source SHA와 digest만 사용하며 build·deploy를 호출하지 않는 별도 script 또는 metadata-only workflow로 구현한다.
+`wibaek/gha/.github/workflows/release.yaml@v1.0`은 release-please와 SemVer release PR을 위한 workflow다. HeadVer candidate tag, Head 종료 tag·GitHub Release 생성이나 부분 실패 복구에 그대로 사용하지 않는다. `candidate-metadata`와 `close-head`는 artifact manifest의 version, source SHA와 digest만 사용하며 build·deploy를 호출하지 않는 별도 script 또는 metadata-only workflow로 구현한다.
 
 rollback이나 단순 redeploy는 `docker` job을 거치지 않고 기록된 digest reference를 `ssh-compose-vps-deploy.yaml` 또는 `ssh-compose-image-load-deploy.yaml`의 `image-reference`로 직접 넘긴다.
 

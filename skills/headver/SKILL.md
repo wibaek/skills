@@ -161,24 +161,27 @@ digest B는 검증되지 않은 별도 artifact다. digest A에 `5.2634.143`과 
 
 ## 릴리스 수명주기
 
-일반적인 build-once/promote-many 흐름은 다음과 같다.
+일반적인 build-once/promote-many 흐름은 다음과 같다. Git tag에 `v` prefix를 사용하는 프로젝트를 예로 들면 정확한 HeadVer tag와 Head 종료 tag의 역할을 구분한다.
 
 1. 설정과 외부 build 최대값 검증
 2. HeadVer 한 번 생성
 3. artifact build·publish
 4. version, commit SHA, digest 기록
-5. staging에 동일 artifact 배포
-6. 검증 후 production에 동일 artifact 승격
-7. 정책에 따라 Git tag, GitHub Release와 배포 메타데이터 기록
-8. 다음 Head 준비하되 Head-only 변경에서는 build 생략
+5. 정확한 HeadVer Git tag 생성: `v5.2634.143`
+6. staging에 동일 artifact 배포
+7. production은 기존 `v5.2634.143`의 artifact를 그대로 승격
+8. production 성공 후 같은 commit에 Head 종료 Git tag `v5` 하나를 생성하고 Release·배포 메타데이터 기록
+9. 다음 Head 준비하되 Head-only 변경에서는 build 생략
 
 실제 CI/CD를 설계하거나 예시를 제시할 때는 [워크플로우 예시](references/workflow-examples.md)에서 해당 artifact 유형만 읽고 repository의 기존 명령과 배포 구조에 맞게 적용한다.
 
-tag·Release 생성 시점은 플랫폼의 복구 가능성을 고려해 정한다. production 성공 후 tag·Release가 실패해도 새 Build를 발급하거나 artifact를 다시 빌드하지 않는다. 이미 배포된 version, commit SHA와 digest를 확인해 누락된 tag·Release만 복구한다. 복구를 수동으로 할지 자동화할지는 프로젝트가 선택하며, 별도 복구 workflow를 반드시 두도록 강제하지 않는다.
+정확한 HeadVer tag는 staging candidate를 식별하는 immutable tag다. Head 종료 tag는 production에서 확정된 commit을 Git history에서 찾기 쉽게 표시하는 immutable metadata이며 배포 입력, latest pointer 또는 artifact identity로 사용하지 않는다. 두 tag가 같은 commit을 가리키는지 확인하고, 이미 존재하는 Head 종료 tag를 다른 commit으로 이동시키지 않는다.
+
+tag·Release 생성에 실패해도 새 Build를 발급하거나 artifact를 다시 빌드하지 않는다. 이미 기록된 version, commit SHA와 digest를 확인해 누락된 tag·Release만 복구한다. production 성공 후 Head 종료 tag 생성만 실패했다면 정확한 HeadVer tag가 가리키는 commit에 종료 tag 하나만 복구한다. 복구를 수동으로 할지 자동화할지는 프로젝트가 선택하며, 별도 복구 workflow를 반드시 두도록 강제하지 않는다.
 
 같은 artifact와 배포 대상의 release는 직렬화하고 진행 중인 release를 새 실행이 취소하지 않게 한다. 실제 concurrency key는 artifact, 환경과 branch 구조에 맞춘다.
 
-hotfix는 기존 Head를 유지하고 새 Build를 발급하거나 새 Head를 사용할 수 있다. 기존 Head를 유지한다면 대상 release branch·tag 또는 production release metadata에 기록된 Head를 사용하고, `main`에 예약된 다음 Head를 자동으로 읽지 않는다. 어느 쪽이든 hotfix artifact를 만들기 전에 선택하고, 이미 존재하는 artifact를 다른 version으로 다시 이름 붙이지 않는다.
+Head 종료 tag가 생성되면 해당 Head는 닫힌다. 이후 hotfix는 새 Head로 발급하며 종료 tag를 이동시키거나 이미 존재하는 artifact를 다른 version으로 다시 이름 붙이지 않는다.
 
 ## 설정과 검증
 
@@ -206,6 +209,7 @@ versioning:
 - timezone이 유효하지 않으면 실패한다.
 - `yearweek`가 정확히 네 자리인지 확인한다.
 - 최종 version이 숫자로 된 세 구간인지 확인한다.
+- 해당 Head의 종료 tag가 이미 존재하면 닫힌 Head의 재사용으로 보고 새 artifact 생성을 실패시킨다.
 - 기존 tag, Release, registry와 외부 스토어 build 중복을 게시 전에 확인한다.
 
 오류가 있으면 추정값이나 기본값으로 배포를 계속하지 않는다.
