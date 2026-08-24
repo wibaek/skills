@@ -25,7 +25,7 @@ HeadVer는 표시용 문자열이 아니라 artifact identity다. version을 sou
 
 ### 구성 요소 규칙
 
-- **Head**: candidate를 만들기 전에 정하고 staging과 production 사이에서 바꾸지 않는다.
+- **Head**: artifact를 build하기 전에 정하고 staging과 production 사이에서 바꾸지 않는다.
 - **YearWeek**: ISO week-year의 마지막 두 자리와 ISO week number 두 자리다. 달력 연도가 아닌 ISO week-year를 사용한다.
 - **Build**: artifact namespace 안에서 고유하고 단조 증가한다. 누락된 번호는 허용하며 artifact가 처음 게시되면 소비된다.
 - 기존 artifact를 승격할 때는 Build를 증가시키지 않는다. 같은 source를 다시 build하면 새 Build와 새 artifact다.
@@ -43,11 +43,11 @@ v5.2633.140 production 성공
 -> staging 배포
 ```
 
-Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 릴리스 라인의 정상적인 첫 candidate다. Build를 소비하고 다른 candidate와 같은 방식으로 staging에서 검증한다. 다만 production 배포와 `v6` 종료 tag 생성은 자동으로 수행하지 않는다.
+Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 릴리스 라인의 정상적인 첫 build다. Build를 소비하고 다른 build와 같은 방식으로 staging에서 검증한다. 다만 production 배포와 `v6` 종료 tag 생성은 자동으로 수행하지 않는다.
 
 Head 6에서 변경사항이 쌓이면 새 Build를 계속 staging에 배포한다.
 
-기본 workflow는 `main`에 반영된 commit마다 candidate artifact를 자동으로 build·publish하고 staging에 배포한다. production만 검증을 마친 exact tag를 선택해 별도로 실행한다.
+기본 workflow는 `main`에 반영된 commit마다 artifact를 자동으로 build·publish하고 staging에 배포한다. production만 검증을 마친 exact tag를 선택해 별도로 실행한다.
 
 ```text
 6.2634.142 build·publish -> v6.2634.142 -> staging
@@ -63,7 +63,7 @@ v6.2635.147 선택
 -> production 성공
 -> 같은 commit에 Head 종료 tag v6 생성
 -> GitHub Release는 정확한 tag v6.2635.147에 연결
--> Head를 7로 변경해 baseline candidate build·staging
+-> Head를 7로 변경해 baseline build·staging
 ```
 
 `v6`는 Head 6의 production 확정 지점을 Git history에서 찾기 위한 immutable 표식이다. 배포 입력, latest pointer 또는 artifact identity로 사용하지 않는다. `v6`가 생성되면 Head 6은 닫히며 이후 hotfix도 새 Head를 사용한다.
