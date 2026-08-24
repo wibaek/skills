@@ -76,7 +76,7 @@ v6.2635.147 선택
 6. 환경 설정이나 flavor 때문에 binary가 달라지면 별도 artifact와 version으로 관리한다.
 7. 같은 artifact와 배포 대상의 release는 직렬화한다.
 
-같은 workflow run을 재실행하더라도 이미 게시된 HeadVer artifact를 다시 build하지 않는다. 안전한 resume을 증명할 수 없으면 새 run으로 새 Build를 발급한다. tag·Release 생성만 실패했다면 artifact를 다시 만들지 않고 누락된 metadata만 복구한다.
+같은 workflow run을 재실행하더라도 이미 게시된 HeadVer artifact를 다시 build하지 않는다. 안전한 resume을 증명할 수 없으면 새 run으로 새 Build를 발급한다.
 
 ## Repository에 적용할 때
 
@@ -92,7 +92,6 @@ artifact identity와 staging→production 승격 방식
 ```
 
 - 독립적으로 build·배포되는 프론트, 백엔드와 모바일 앱은 artifact별 HeadVer를 사용한다.
-- `head`, Build와 offset은 0 이상의 정수로, `yearweek`는 정확히 네 자리로 검증한다.
 - Head 종료 tag가 이미 있으면 닫힌 Head의 재사용으로 보고 새 artifact 생성을 거부한다.
 - 오류나 불확실한 외부 상태에서는 fail closed한다.
 - tag·Release 생성, push, 스토어 업로드와 production 배포는 사용자가 명시적으로 요청한 범위에서만 수행한다.
