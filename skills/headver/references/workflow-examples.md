@@ -20,94 +20,172 @@ version 확정
 
 - release를 직렬화하고 진행 중인 release를 새 실행이 취소하지 않게 한다.
 - build job의 output으로 version과 digest를 이후 job에 전달한다.
-- staging과 production job에서는 source checkout이나 build 명령을 실행하지 않는다.
+- staging과 production job은 deploy manifest를 읽기 위해 source를 checkout할 수 있지만 애플리케이션 artifact를 다시 build하지 않는다.
 - rerun 시 artifact가 없으면 같은 Build로 최초 게시할 수 있다.
 - rerun 시 artifact가 있으면 source revision을 검증하고 기존 digest를 재사용한다.
 - artifact 상태를 확인할 수 없거나 같은 version이 다른 revision을 가리키면 실패한다.
 - production 이후 tag·Release만 실패했다면 기존 metadata만 복구한다.
 
-## GitHub Actions 골격
+## `wibaek/gha` 적용
 
-checkout과 인증 단계는 생략했다. dependency 설치는 repository가 이미 사용하는 고정된 action 또는 script를 따른다. 아래 예시는 job 간 identity 전달과 재빌드 방지 구조에 집중한다.
+[`wibaek/gha`](https://github.com/wibaek/gha)는 reusable workflow를 `jobs.<job_id>.uses`로 호출한다. `steps` 안에서 호출하지 않고 `@v1.0`처럼 release tag로 고정한다. 기본 권한은 `contents: read`로 두고 GHCR build에는 `packages: write`, deploy에는 `packages: read`처럼 job별 최소 권한만 추가한다.
+
+`wibaek/gha`의 HeadVer 문서는 구현 참고 자료이며 이 스킬의 정책보다 우선하지 않는다. 특히 Head-only 변경 후 baseline artifact를 자동 생성하는 흐름은 채택하지 않는다.
+
+### GHCR와 VPS staging→production
+
+`docker-build-ghcr-push.yaml@v1.0`은 image를 한 번 build·push하고 다음 output을 제공한다.
+
+```text
+image-reference = ghcr.io/owner/app@sha256:...
+image-digest    = sha256:...
+```
+
+`ssh-compose-vps-deploy.yaml@v1.0`은 `image-reference`를 입력으로 받으므로 staging과 production job에 같은 output을 전달한다. HeadVer tag와 build tag를 함께 발행하면 full version과 `artifact + build` 중복을 각각 검사할 근거가 생긴다.
+
+현재 GHCR reusable workflow는 실행될 때마다 build·push하며 기존 artifact를 조회해 resume하는 기능은 제공하지 않는다. 따라서 아래 호환 예시는 caller에서 `github.run_attempt != 1`인 artifact publish를 차단한다. 게시 전 실패한 rerun을 같은 Build로 허용하려면 reusable workflow 앞에 registry lookup·claim adapter를 추가하거나 `wibaek/gha`에 resume output을 구현해야 한다.
 
 ```yaml
-name: release
+name: HeadVer Release Candidate
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: headver-release-${{ github.repository }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      digest: ${{ steps.artifact.outputs.digest }}
+      version: ${{ steps.headver.outputs.version }}
+      build: ${{ steps.headver.outputs.build }}
     steps:
-      - name: Install dependencies after checkout
-        run: ./scripts/prepare-release
-
-      - name: Generate HeadVer
-        id: version
+      - name: Block artifact publish on rerun
+        if: github.run_attempt != 1
         run: |
-          set -euo pipefail
-          version="$(./scripts/headver-version "$GITHUB_RUN_NUMBER")"
-          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          echo "::error title=Artifact publish blocked on rerun::Start a new workflow run."
+          exit 1
 
-      - name: Publish or resume immutable artifact
-        id: artifact
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Generate HeadVer outputs
+        id: headver
+        run: ./scripts/generate-headver.sh "$GITHUB_OUTPUT"
+
+      - name: Check immutable tags before publish
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          if ./scripts/artifact-exists "$VERSION"; then
-            ./scripts/verify-artifact "$VERSION" "$GITHUB_SHA"
-          else
-            ./scripts/build-artifact "$VERSION"
-            ./scripts/publish-artifact "$VERSION" "$GITHUB_SHA"
-          fi
-          digest="$(./scripts/artifact-digest "$VERSION")"
-          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.headver.outputs.version }}
+          BUILD: ${{ steps.headver.outputs.build }}
+        run: ./scripts/assert-headver-tags-available.sh "$VERSION" "$BUILD"
+
+  docker:
+    needs: prepare
+    uses: wibaek/gha/.github/workflows/docker-build-ghcr-push.yaml@v1.0
+    permissions:
+      contents: read
+      packages: write
+    with:
+      image-name: auto
+      context: .
+      dockerfile: ./Dockerfile
+      platform: linux/amd64
+      tags: |
+        type=raw,value=${{ needs.prepare.outputs.version }}
+        type=raw,value=build-${{ needs.prepare.outputs.build }}
 
   deploy-staging:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: staging
-    steps:
-      - name: Deploy immutable artifact
-        env:
-          VERSION: ${{ needs.build.outputs.version }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-        run: ./scripts/deploy-artifact staging "$VERSION" "$DIGEST"
+    needs: docker
+    uses: wibaek/gha/.github/workflows/ssh-compose-vps-deploy.yaml@v1.0
+    permissions:
+      contents: read
+      packages: read
+    with:
+      app-name: my-app
+      service-name: app
+      remote-dir: /srv/my-app-staging
+      compose-file: deploy/compose.yaml
+      image-reference: ${{ needs.docker.outputs.image-reference }}
+    secrets:
+      VPS_HOST: ${{ secrets.STAGING_VPS_HOST }}
+      VPS_USER: ${{ secrets.STAGING_VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.STAGING_VPS_SSH_KEY }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.STAGING_VPS_SSH_KNOWN_HOSTS }}
+      RUNTIME_ENV: ${{ secrets.STAGING_APP_ENV }}
 
-  deploy-production:
-    needs: [build, deploy-staging]
+  approve-production:
+    needs: deploy-staging
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Promote the staging artifact
-        env:
-          VERSION: ${{ needs.build.outputs.version }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-        run: ./scripts/deploy-artifact production "$VERSION" "$DIGEST"
+      - name: Record approval
+        run: echo "Production deployment approved"
+
+  deploy-production:
+    needs: [docker, approve-production]
+    uses: wibaek/gha/.github/workflows/ssh-compose-vps-deploy.yaml@v1.0
+    permissions:
+      contents: read
+      packages: read
+    with:
+      app-name: my-app
+      service-name: app
+      remote-dir: /srv/my-app
+      compose-file: deploy/compose.yaml
+      image-reference: ${{ needs.docker.outputs.image-reference }}
+    secrets:
+      VPS_HOST: ${{ secrets.PRODUCTION_VPS_HOST }}
+      VPS_USER: ${{ secrets.PRODUCTION_VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.PRODUCTION_VPS_SSH_KEY }}
+      VPS_SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_VPS_SSH_KNOWN_HOSTS }}
+      RUNTIME_ENV: ${{ secrets.PRODUCTION_APP_ENV }}
 
   release-metadata:
-    needs: [build, deploy-production]
+    needs: [prepare, docker, deploy-production]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Create missing tag and Release metadata
+      - name: Checkout artifact source revision
+        uses: actions/checkout@v6
+
+      - name: Create missing HeadVer tag and Release
         env:
-          VERSION: ${{ needs.build.outputs.version }}
-          DIGEST: ${{ needs.build.outputs.digest }}
-        run: ./scripts/ensure-release-metadata "$VERSION" "$GITHUB_SHA" "$DIGEST"
+          VERSION: ${{ needs.prepare.outputs.version }}
+          DIGEST: ${{ needs.docker.outputs.image-digest }}
+          IMAGE_REFERENCE: ${{ needs.docker.outputs.image-reference }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: ./scripts/ensure-headver-release.sh
 ```
 
-`production` environment에 승인이 설정되어 있다면 승인 대기 중에도 build artifact가 바뀌지 않는다. `release-metadata` 복구가 필요할 때는 build와 deploy를 다시 실행하지 않고 이미 배포된 version, revision과 digest를 입력으로 사용한다.
+현재 `v1.0`의 VPS deploy workflow에는 `environment`와 `concurrency-group` input이 없다. 따라서 예시는 caller의 `approve-production` job에 `production` GitHub Environment를 연결하고 workflow-level concurrency로 release 전체를 직렬화한다. `main`에만 있는 신규 input을 `@v1.0` 호출에 넘기지 않는다. 해당 input이 새 release tag에 포함되면 called workflow의 environment와 concurrency를 직접 사용할 수 있다.
 
-Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 release workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고, 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
+`production` GitHub Environment에 required reviewer를 설정하면 승인 대기 중에도 image digest는 바뀌지 않는다. runtime secret은 image build argument로 넣지 않고 각 deploy job의 `RUNTIME_ENV`로 전달한다.
+
+`wibaek/gha/.github/workflows/release.yaml@v1.0`은 release-please와 SemVer release PR을 위한 workflow다. HeadVer production tag·GitHub Release 생성이나 부분 실패 복구에 그대로 사용하지 않는다. `release-metadata`는 artifact manifest의 version, source SHA와 digest만 사용하며 build·deploy를 호출하지 않는 별도 script 또는 metadata-only workflow로 구현한다.
+
+rollback이나 단순 redeploy는 `docker` job을 거치지 않고 기록된 digest reference를 `ssh-compose-vps-deploy.yaml` 또는 `ssh-compose-image-load-deploy.yaml`의 `image-reference`로 직접 넘긴다.
+
+### Cloudflare Pages와 Workers 경계
+
+현재 `cloudflare-pages-deploy.yaml@v1.0`과 `cloudflare-workers-deploy.yaml@v1.0`은 source checkout, dependency 설치, build와 deploy를 한 job에서 수행한다. 같은 source로 staging과 production workflow를 각각 호출하면 별도 build가 되므로 HeadVer의 동일 artifact 승격 예시로 사용하지 않는다.
+
+다음 중 실제 운영 모델에 맞는 방식을 선택한다.
+
+- 단일 환경에 한 번만 배포한다면 기존 reusable workflow를 그대로 사용하고 해당 실행을 하나의 artifact로 기록한다.
+- staging과 production에 서로 다른 build가 필요하다면 artifact namespace와 HeadVer를 분리한다.
+- 동일 artifact 승격이 필요하다면 build/publish와 deploy-by-reference를 분리한 reusable workflow를 추가한 뒤, 같은 deployment reference 또는 checksum을 두 환경에 전달한다.
+
+Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 artifact-producing workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
 
 ## 정적 웹 artifact
 
