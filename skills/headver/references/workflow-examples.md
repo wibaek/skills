@@ -34,6 +34,8 @@ Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline candidate로
 
 GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서는 바뀌지 않는다. build source로 사용하기 전에 workflow 교체·분리, 같은 artifact를 발행하는 다른 workflow와 외부 플랫폼의 기존 build number를 확인한다. namespace가 달라지거나 기존 값과 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다.
 
+`Asia/Seoul`의 YearWeek은 `TZ=Asia/Seoul date +%g%V`처럼 계산한다. `%y%V`를 사용하지 않고 `2018-12-31 -> 1901`, `2019-12-31 -> 2001`, `2016-01-01 -> 1553` 경계값을 검증한다.
+
 ## `wibaek/gha` 적용
 
 [`wibaek/gha`](https://github.com/wibaek/gha)는 reusable workflow를 `jobs.<job_id>.uses`로 호출한다. `steps` 안에서 호출하지 않고 `@v1.0`처럼 release tag로 고정한다. 기본 권한은 `contents: read`로 두고 GHCR build에는 `packages: write`, deploy에는 `packages: read`처럼 job별 최소 권한만 추가한다.
