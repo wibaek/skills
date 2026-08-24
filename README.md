@@ -25,6 +25,7 @@ npx skills add wibaek/skills
 | 스킬 | 용도 |
 | --- | --- |
 | `api-error-standard` | RFC 9457/7807 Problem Details 기반 API 에러 응답 표준화 |
+| `headver` | HeadVer 기반 제품 버전과 build-once/promote-many 릴리스 흐름 설계 |
 | `oauth2-standard` | RFC 6749 기반 OAuth 2.0 flow, endpoint, token/error response 검토 |
 | `rest-api-guidelines` | HTTP+JSON REST API의 resource 설계, method, status code, pagination, 호환성 규칙 정리 |
 
@@ -33,6 +34,7 @@ npx skills add wibaek/skills
 ```text
 skills/
   api-error-standard/
+  headver/
   oauth2-standard/
   rest-api-guidelines/
 ```
