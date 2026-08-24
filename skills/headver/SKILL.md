@@ -98,6 +98,6 @@ artifact identity와 staging→production 승격 방식
 
 앱·웹 서비스·백엔드 같은 제품 artifact에 사용한다. 공개 라이브러리처럼 version으로 API 호환성을 표현하는 패키지는 기존 SemVer 또는 생태계 정책을 우선한다.
 
-GitHub Actions, `wibaek/gha`, rerun·부분 실패 복구 또는 플랫폼별 version 주입을 구현할 때만 [워크플로우 예시](references/workflow-examples.md)에서 필요한 부분을 읽는다.
+GitHub Actions를 구현할 때 [워크플로우 예시](references/workflow-examples.md)에서 필요한 부분을 읽는다.
 
 HeadVer 원본 명세: https://github.com/line/headver
