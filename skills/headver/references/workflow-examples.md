@@ -22,7 +22,7 @@ version 확정
 - Head 종료 tag는 Git history 탐색용이며 배포나 artifact 조회에 사용하지 않는다.
 - 같은 artifact의 release는 직렬화한다. 서로 독립된 artifact는 concurrency group을 분리한다.
 
-Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline candidate로 build·publish하고 staging에 배포한다. Build와 정확한 HeadVer tag를 발급하되 production 배포와 Head 종료 tag 생성은 별도 승인 전까지 실행하지 않는다.
+Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline candidate로 build·publish하고 staging에 배포한다. Build와 정확한 HeadVer tag를 발급하되 production 배포와 Head 종료 tag 생성은 별도 production workflow를 실행할 때 수행한다.
 
 GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서는 바뀌지 않는다. workflow 교체·분리, 같은 artifact를 발행하는 다른 workflow와 외부 플랫폼의 기존 build number를 확인하고 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다.
 
@@ -30,10 +30,12 @@ GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서�
 
 ## GitHub Actions 예시
 
-다음 예시는 특정 action이나 reusable workflow에 의존하지 않는다. 각 script가 repository에 맞는 artifact build·publish와 배포를 수행한다고 가정한다.
+다음 예시는 특정 action이나 reusable workflow에 의존하지 않는다. candidate 생성과 production 승격은 각각 수동 workflow로 실행한다.
+
+### Candidate workflow
 
 ```yaml
-name: HeadVer Release Candidate
+name: HeadVer Candidate
 
 on:
   workflow_dispatch:
@@ -42,12 +44,13 @@ concurrency:
   group: headver-release-${{ github.repository }}-my-app
   cancel-in-progress: false
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       head: ${{ steps.headver.outputs.head }}
       version: ${{ steps.headver.outputs.version }}
@@ -70,9 +73,12 @@ jobs:
     needs: prepare
     if: github.run_attempt == 1
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     outputs:
-      artifact-reference: ${{ steps.publish.outputs.artifact-reference }}
-      artifact-digest: ${{ steps.publish.outputs.artifact-digest }}
+      artifact_reference: ${{ steps.publish.outputs.artifact_reference }}
+      artifact_digest: ${{ steps.publish.outputs.artifact_digest }}
     steps:
       - uses: actions/checkout@v6
 
@@ -84,7 +90,7 @@ jobs:
           SOURCE_SHA: ${{ github.sha }}
         run: ./scripts/build-publish.sh "$GITHUB_OUTPUT"
 
-  candidate-tag:
+  record_candidate:
     needs: [prepare, build]
     runs-on: ubuntu-latest
     permissions:
@@ -92,40 +98,88 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Create exact HeadVer tag
+      - name: Create exact tag and record artifact manifest
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact-reference }}
-          ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact-digest }}
+          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact_reference }}
+          ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact_digest }}
           SOURCE_SHA: ${{ github.sha }}
-        run: ./scripts/create-headver-tag.sh
+        run: ./scripts/record-headver-candidate.sh
 
-  deploy-staging:
-    needs: [build, candidate-tag]
+  deploy_staging:
+    needs: [build, record_candidate]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     environment: staging
     steps:
       - uses: actions/checkout@v6
 
       - name: Deploy existing artifact to staging
         env:
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact-reference }}
+          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact_reference }}
         run: ./scripts/deploy.sh staging "$ARTIFACT_REFERENCE"
+```
 
-  deploy-production:
-    needs: [build, deploy-staging]
+`record-headver-candidate.sh`는 정확한 Git tag와 함께 version, source SHA, artifact reference와 digest를 production workflow가 다시 조회할 수 있는 manifest로 기록한다.
+
+### Production workflow
+
+```yaml
+name: HeadVer Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: Exact HeadVer tag to deploy, for example v6.2635.147
+        required: true
+        type: string
+
+concurrency:
+  group: headver-release-${{ github.repository }}-my-app
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  resolve_candidate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      head: ${{ steps.candidate.outputs.head }}
+      version: ${{ steps.candidate.outputs.version }}
+      source_sha: ${{ steps.candidate.outputs.source_sha }}
+      artifact_reference: ${{ steps.candidate.outputs.artifact_reference }}
+      artifact_digest: ${{ steps.candidate.outputs.artifact_digest }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve exact candidate
+        id: candidate
+        env:
+          VERSION_TAG: ${{ inputs.version_tag }}
+        run: ./scripts/resolve-headver-candidate.sh "$VERSION_TAG" "$GITHUB_OUTPUT"
+
+  deploy_production:
+    needs: resolve_candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     environment: production
     steps:
       - uses: actions/checkout@v6
 
-      - name: Promote existing artifact to production
+      - name: Deploy selected artifact to production
         env:
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact-reference }}
+          ARTIFACT_REFERENCE: ${{ needs.resolve_candidate.outputs.artifact_reference }}
         run: ./scripts/deploy.sh production "$ARTIFACT_REFERENCE"
 
-  close-head:
-    needs: [prepare, build, deploy-production]
+  close_head:
+    needs: [resolve_candidate, deploy_production]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -134,17 +188,19 @@ jobs:
 
       - name: Create Head closing tag and exact Release
         env:
-          HEAD: ${{ needs.prepare.outputs.head }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact-reference }}
-          ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact-digest }}
-          SOURCE_SHA: ${{ github.sha }}
+          HEAD: ${{ needs.resolve_candidate.outputs.head }}
+          VERSION: ${{ needs.resolve_candidate.outputs.version }}
+          SOURCE_SHA: ${{ needs.resolve_candidate.outputs.source_sha }}
+          ARTIFACT_REFERENCE: ${{ needs.resolve_candidate.outputs.artifact_reference }}
+          ARTIFACT_DIGEST: ${{ needs.resolve_candidate.outputs.artifact_digest }}
         run: ./scripts/close-head.sh
 ```
 
-`artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다.
+production workflow의 수동 실행이 배포할 정확한 tag를 선택하는 단계다. `environment: production`은 environment secret과 배포 기록을 사용하기 위한 것이며, repository에 required reviewer가 설정된 경우에만 추가 승인을 기다린다.
 
-build job이 성공하고 deploy만 실패했다면 **Re-run failed jobs**로 실패한 deploy만 다시 실행한다. build job 자체가 실패했다면 push 전후 상태를 안전하게 확인할 수 없는 한 재실행하지 않고 새 workflow run으로 새 Build를 발급한다.
+`artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다. build job이 성공하고 staging만 실패했다면 **Re-run failed jobs**로 staging만 다시 실행한다. build job 자체가 실패했다면 새 workflow run으로 새 Build를 발급한다.
+
+`packages: read|write`는 GitHub Packages를 사용하는 예시다. 다른 registry를 사용하면 해당 permission을 제거하고 필요한 credential과 최소 권한으로 바꾼다.
 
 ## 정적 웹
 
