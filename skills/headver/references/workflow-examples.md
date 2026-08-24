@@ -30,7 +30,7 @@ GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서�
 
 ## GitHub Actions 예시
 
-다음 예시는 특정 action이나 reusable workflow에 의존하지 않는다. candidate 생성과 production 승격은 각각 수동 workflow로 실행한다.
+다음 예시는 특정 action이나 reusable workflow에 의존하지 않는다. candidate는 `main`에 반영될 때 자동으로 생성해 staging에 배포하고, production 승격만 별도 수동 workflow로 실행한다.
 
 ### Candidate workflow
 
@@ -38,7 +38,9 @@ GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서�
 name: HeadVer Candidate
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 concurrency:
   group: headver-release-${{ github.repository }}-my-app

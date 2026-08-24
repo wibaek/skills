@@ -47,6 +47,8 @@ Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 �
 
 Head 6에서 변경사항이 쌓이면 새 Build를 계속 staging에 배포한다.
 
+기본 workflow는 `main`에 반영된 commit마다 candidate artifact를 자동으로 build·publish하고 staging에 배포한다. production만 검증을 마친 exact tag를 선택해 별도로 실행한다.
+
 ```text
 6.2634.142 build·publish -> v6.2634.142 -> staging
 6.2635.147 build·publish -> v6.2635.147 -> staging
