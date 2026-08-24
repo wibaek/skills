@@ -30,13 +30,13 @@ version 확정
 - Head 종료 tag가 이미 있으면 해당 Head는 닫힌 것으로 보고 새 candidate 생성을 거부한다.
 - tag·Release만 실패했다면 기존 version, source revision과 digest를 검증하고 누락된 metadata만 복구한다.
 
-Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 artifact-producing workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
+Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline candidate로 build·publish하고 staging에 배포한다. 이 경우에도 Build와 정확한 HeadVer tag를 발급하고 다른 candidate와 같은 불변조건을 적용하되, production 배포와 Head 종료 tag 생성은 별도 승인 전까지 실행하지 않는다.
 
 ## `wibaek/gha` 적용
 
 [`wibaek/gha`](https://github.com/wibaek/gha)는 reusable workflow를 `jobs.<job_id>.uses`로 호출한다. `steps` 안에서 호출하지 않고 `@v1.0`처럼 release tag로 고정한다. 기본 권한은 `contents: read`로 두고 GHCR build에는 `packages: write`, deploy에는 `packages: read`처럼 job별 최소 권한만 추가한다.
 
-`wibaek/gha`의 HeadVer 문서는 구현 참고 자료이며 이 스킬의 정책보다 우선하지 않는다. 특히 Head-only 변경 후 baseline artifact를 자동 생성하는 흐름은 채택하지 않는다.
+`wibaek/gha`의 HeadVer 문서는 구현 참고 자료이며 이 스킬의 정책보다 우선하지 않는다. Head-only 변경으로 만드는 baseline candidate에도 다른 candidate와 같은 artifact 불변조건을 적용한다.
 
 ### GHCR와 VPS staging→production
 

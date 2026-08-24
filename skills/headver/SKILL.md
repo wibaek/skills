@@ -67,13 +67,7 @@ promotion 방식:
 
 다음 릴리스 후보를 만들기 전에 사용할 Head가 이미 확정되어 있어야 한다. staging에서 검증한 artifact를 production에 승격하는 순간 Head를 바꾸지 않는다.
 
-production 성공 후 다음 Head를 설정 파일이나 PR로 준비할 수 있다. 이 Head-only 변경은 다음 릴리스 라인을 예약할 뿐이며, 기본적으로 artifact build·publish·staging deploy를 발생시키지 않아야 한다. Head만 바꾼 commit이 `main` build를 자동 실행한다면 다음 중 repository에 맞는 방식을 적용한다.
-
-- version 설정만 변경된 실행은 artifact 생성 단계를 건너뛴다.
-- artifact-producing workflow를 명시적 release-candidate trigger로 분리한다.
-- path 또는 change guard로 Head-only 변경을 식별한다.
-
-프로젝트가 기능 변경 없는 baseline artifact를 의도적으로 원한다면 예외로 허용할 수 있다. 이 경우 build number 소비, staging 배포와 artifact 보관 비용을 정책에 명시한다.
+production 성공 후 다음 Head를 설정 파일이나 PR로 준비한다. 이 Head-only 변경 commit은 다음 릴리스 라인의 baseline candidate로 artifact를 build·publish하고 staging에 배포한다. 이 candidate도 Build를 소비하고 정확한 HeadVer tag를 갖는 일반 artifact로 취급하며, production 배포와 Head 종료 tag 생성은 자동으로 수행하지 않는다.
 
 ### YearWeek
 
@@ -112,7 +106,7 @@ GitHub Actions의 `github.run_number`는 특정 workflow별 카운터이며 reru
 - workflow 교체·이름 변경·분리로 카운터 namespace가 달라지는지
 - 여러 workflow가 같은 artifact를 발행하는지
 - 외부 앱 스토어 또는 registry에 이미 더 큰 build가 있는지
-- 일반 CI나 Head-only commit이 불필요하게 번호를 소비하는지
+- artifact를 만들지 않는 일반 CI가 같은 counter namespace를 공유해 build number를 소비하는지
 
 기존 build와 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다. offset은 외부 시스템의 실제 최대값을 확인한 뒤 정하며, 오류를 감추기 위한 임의의 큰 값으로 선택하지 않는다.
 
@@ -171,7 +165,7 @@ digest B는 검증되지 않은 별도 artifact다. digest A에 `5.2634.143`과 
 6. staging에 동일 artifact 배포
 7. production은 기존 `v5.2634.143`의 artifact를 그대로 승격
 8. production 성공 후 같은 commit에 Head 종료 Git tag `v5` 하나를 생성하고 Release·배포 메타데이터 기록
-9. 다음 Head 준비하되 Head-only 변경에서는 build 생략
+9. 다음 Head를 준비하고 baseline candidate를 build·publish해 staging에 배포
 
 실제 CI/CD를 설계하거나 예시를 제시할 때는 [워크플로우 예시](references/workflow-examples.md)에서 해당 artifact 유형만 읽고 repository의 기존 명령과 배포 구조에 맞게 적용한다.
 
@@ -254,7 +248,7 @@ Sentry 등 관측 도구가 commit SHA 기반 release 이름을 이미 사용한
 구현 또는 리뷰 시 다음을 확인한다.
 
 - ISO week-year와 release timezone이 정확한가
-- Head-only 변경이 의미 없는 baseline artifact를 자동 생성하는가
+- Head-only 변경이 baseline candidate를 만들되 production 배포와 Head 종료 tag까지 자동 실행하지 않는가
 - Head가 staging과 production 사이에서 바뀌지 않는가
 - 동일 digest 또는 binary가 환경 간 승격되는가
 - build counter가 artifact 전체에서 고유하고 외부 최대값보다 큰가
