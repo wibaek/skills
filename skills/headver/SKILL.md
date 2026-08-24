@@ -118,8 +118,10 @@ GitHub Actions의 `github.run_number`는 특정 workflow별 카운터이며 reru
 
 workflow rerun은 동일한 `github.run_number`를 사용한다. artifact 상태에 따라 다음처럼 처리한다.
 
+- artifact-producing job이 성공하고 downstream deploy 또는 metadata job만 실패했다면 성공한 job을 다시 실행하지 않고 실패한 downstream job만 재실행한다.
 - artifact가 아직 게시되지 않았다면 같은 Build로 최초 게시를 완료할 수 있다.
 - 기존 immutable artifact가 있다면 그 artifact를 이어서 게시하는 idempotent resume만 허용한다.
+- artifact-producing job이 실패 상태라 게시 여부를 확정할 수 없다면 registry 조회·identity 검증 같은 안전한 resume 장치가 없는 한 동일 workflow run에서 해당 job을 재실행하지 않는다.
 - artifact의 존재 여부나 identity를 확인할 수 없다면 실패시키고 새 workflow run으로 새 Build를 발급한다.
 
 동일 HeadVer로 artifact를 다시 빌드하거나 덮어쓰지 않는다.

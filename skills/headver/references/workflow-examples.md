@@ -18,13 +18,15 @@ version 확정
 
 다음 조건을 유지한다.
 
-- release를 직렬화하고 진행 중인 release를 새 실행이 취소하지 않게 한다.
+- 같은 artifact의 release를 직렬화하고 진행 중인 release를 새 실행이 취소하지 않게 한다. 서로 독립된 artifact는 concurrency group을 분리한다.
 - build job의 output으로 version과 digest를 이후 job에 전달한다.
 - staging과 production job은 deploy manifest를 읽기 위해 source를 checkout할 수 있지만 애플리케이션 artifact를 다시 build하지 않는다.
 - rerun 시 artifact가 없으면 같은 Build로 최초 게시할 수 있다.
 - rerun 시 artifact가 있으면 source revision을 검증하고 기존 digest를 재사용한다.
 - artifact 상태를 확인할 수 없거나 같은 version이 다른 revision을 가리키면 실패한다.
 - production 이후 tag·Release만 실패했다면 기존 metadata만 복구한다.
+
+Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 artifact-producing workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
 
 ## `wibaek/gha` 적용
 
@@ -43,7 +45,9 @@ image-digest    = sha256:...
 
 `ssh-compose-vps-deploy.yaml@v1.0`은 `image-reference`를 입력으로 받으므로 staging과 production job에 같은 output을 전달한다. HeadVer tag와 build tag를 함께 발행하면 full version과 `artifact + build` 중복을 각각 검사할 근거가 생긴다.
 
-현재 GHCR reusable workflow는 실행될 때마다 build·push하며 기존 artifact를 조회해 resume하는 기능은 제공하지 않는다. 따라서 아래 호환 예시는 caller에서 `github.run_attempt != 1`인 artifact publish를 차단한다. 게시 전 실패한 rerun을 같은 Build로 허용하려면 reusable workflow 앞에 registry lookup·claim adapter를 추가하거나 `wibaek/gha`에 resume output을 구현해야 한다.
+현재 GHCR reusable workflow는 실행될 때마다 build·push하며 기존 artifact를 조회해 resume하는 기능은 제공하지 않는다. 따라서 아래 호환 예시는 caller의 `prepare`와 `docker` job에서 `github.run_attempt != 1`인 artifact publish를 차단한다. 게시 전 실패한 rerun을 같은 Build로 허용하려면 reusable workflow 앞에 registry lookup·claim adapter를 추가하거나 `wibaek/gha`에 resume output을 구현해야 한다.
+
+Docker job이 성공하고 deploy 또는 metadata job만 실패했다면 GitHub Actions의 **Re-run failed jobs**로 실패한 downstream job만 다시 실행해 기존 `image-reference`와 digest를 사용한다. **Re-run all jobs**는 사용하지 않는다. Docker job 자체가 실패했다면 push 전후 상태를 안전하게 판별할 수 없으므로 이 예시에서는 재실행하지 않고 새 workflow run으로 새 Build를 발급한다.
 
 ```yaml
 name: HeadVer Release Candidate
@@ -52,7 +56,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: headver-release-${{ github.repository }}
+  group: headver-release-${{ github.repository }}-my-app
   cancel-in-progress: false
 
 permissions:
@@ -71,7 +75,7 @@ jobs:
       - name: Block artifact publish on rerun
         if: github.run_attempt != 1
         run: |
-          echo "::error title=Artifact publish blocked on rerun::Start a new workflow run."
+          echo "::error title=Full workflow rerun blocked::If Docker succeeded and only a downstream job failed, use Re-run failed jobs. If Docker failed, start a new workflow run."
           exit 1
 
       - name: Checkout
@@ -90,6 +94,7 @@ jobs:
 
   docker:
     needs: prepare
+    if: github.run_attempt == 1
     uses: wibaek/gha/.github/workflows/docker-build-ghcr-push.yaml@v1.0
     permissions:
       contents: read
@@ -167,7 +172,7 @@ jobs:
         run: ./scripts/ensure-headver-release.sh
 ```
 
-현재 `v1.0`의 VPS deploy workflow에는 `environment`와 `concurrency-group` input이 없다. 따라서 예시는 caller의 `approve-production` job에 `production` GitHub Environment를 연결하고 workflow-level concurrency로 release 전체를 직렬화한다. `main`에만 있는 신규 input을 `@v1.0` 호출에 넘기지 않는다. 해당 input이 새 release tag에 포함되면 called workflow의 environment와 concurrency를 직접 사용할 수 있다.
+현재 `v1.0`의 VPS deploy workflow에는 `environment`와 `concurrency-group` input이 없다. 따라서 예시는 caller의 `approve-production` job에 `production` GitHub Environment를 연결하고 workflow-level concurrency로 `my-app` release 전체를 직렬화한다. GitHub Actions는 같은 concurrency group에 실행 중인 run 하나와 대기 중인 run 하나만 유지하므로, 여러 artifact가 있는 repository에서는 artifact마다 group suffix를 다르게 지정한다. `main`에만 있는 신규 input을 `@v1.0` 호출에 넘기지 않는다. 해당 input이 새 release tag에 포함되면 called workflow의 environment와 concurrency를 직접 사용할 수 있다.
 
 `production` GitHub Environment에 required reviewer를 설정하면 승인 대기 중에도 image digest는 바뀌지 않는다. runtime secret은 image build argument로 넣지 않고 각 deploy job의 `RUNTIME_ENV`로 전달한다.
 
@@ -184,8 +189,6 @@ rollback이나 단순 redeploy는 `docker` job을 거치지 않고 기록된 dig
 - 단일 환경에 한 번만 배포한다면 기존 reusable workflow를 그대로 사용하고 해당 실행을 하나의 artifact로 기록한다.
 - staging과 production에 서로 다른 build가 필요하다면 artifact namespace와 HeadVer를 분리한다.
 - 동일 artifact 승격이 필요하다면 build/publish와 deploy-by-reference를 분리한 reusable workflow를 추가한 뒤, 같은 deployment reference 또는 checksum을 두 환경에 전달한다.
-
-Head 설정만 바뀐 commit에서 artifact가 생성되는 것을 피하려면 artifact-producing workflow를 `workflow_dispatch` 같은 명시적 candidate trigger로 분리하는 방식을 우선 고려한다. `push` trigger를 유지한다면 변경 파일이 Head 설정뿐일 때에만 build job을 건너뛰고 코드 변경까지 함께 있는 commit을 잘못 제외하지 않게 한다.
 
 ## 정적 웹 artifact
 
