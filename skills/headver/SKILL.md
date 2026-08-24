@@ -170,6 +170,8 @@ digest B는 검증되지 않은 별도 artifact다. digest A에 `5.2634.143`과 
 7. 정책에 따라 Git tag, GitHub Release와 배포 메타데이터 기록
 8. 다음 Head 준비하되 Head-only 변경에서는 build 생략
 
+실제 CI/CD를 설계하거나 예시를 제시할 때는 [워크플로우 예시](references/workflow-examples.md)에서 해당 artifact 유형만 읽고 repository의 기존 명령과 배포 구조에 맞게 적용한다.
+
 tag·Release 생성 시점은 플랫폼의 복구 가능성을 고려해 정한다. production 성공 후 tag·Release가 실패해도 새 Build를 발급하거나 artifact를 다시 빌드하지 않는다. 이미 배포된 version, commit SHA와 digest를 확인해 누락된 tag·Release만 복구한다. 복구를 수동으로 할지 자동화할지는 프로젝트가 선택하며, 별도 복구 workflow를 반드시 두도록 강제하지 않는다.
 
 같은 artifact와 배포 대상의 release는 직렬화하고 진행 중인 release를 새 실행이 취소하지 않게 한다. 실제 concurrency key는 artifact, 환경과 branch 구조에 맞춘다.
