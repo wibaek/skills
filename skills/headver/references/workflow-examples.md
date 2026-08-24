@@ -32,6 +32,8 @@ version 확정
 
 Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline candidate로 build·publish하고 staging에 배포한다. 이 경우에도 Build와 정확한 HeadVer tag를 발급하고 다른 candidate와 같은 불변조건을 적용하되, production 배포와 Head 종료 tag 생성은 별도 승인 전까지 실행하지 않는다.
 
+GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서는 바뀌지 않는다. build source로 사용하기 전에 workflow 교체·분리, 같은 artifact를 발행하는 다른 workflow와 외부 플랫폼의 기존 build number를 확인한다. namespace가 달라지거나 기존 값과 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다.
+
 ## `wibaek/gha` 적용
 
 [`wibaek/gha`](https://github.com/wibaek/gha)는 reusable workflow를 `jobs.<job_id>.uses`로 호출한다. `steps` 안에서 호출하지 않고 `@v1.0`처럼 release tag로 고정한다. 기본 권한은 `contents: read`로 두고 GHCR build에는 `packages: write`, deploy에는 `packages: read`처럼 job별 최소 권한만 추가한다.
@@ -258,7 +260,19 @@ registry에 같은 HeadVer tag가 이미 있다면 다음처럼 처리한다.
 
 iOS와 Android는 각각 독립된 binary artifact로 취급한다. 하나의 릴리스 단위로 관리하더라도 플랫폼별 archive와 store build identity를 기록한다.
 
+Flutter build에는 다음 값을 명시적으로 주입한다.
+
+```text
+--build-name={HeadVer}
+--build-number={build}
+```
+
 ### iOS
+
+```text
+CFBundleShortVersionString={HeadVer}
+CFBundleVersion={build}
+```
 
 ```text
 HeadVer와 CFBundleVersion 확정
@@ -271,6 +285,11 @@ HeadVer와 CFBundleVersion 확정
 App Store 제출 직전에 archive를 다시 만들지 않는다. 인증서나 export 단계가 binary를 바꾼다면 어떤 산출물을 staging에서 검증하고 production에 제출하는지 별도로 정의한다.
 
 ### Android
+
+```text
+versionName={HeadVer}
+versionCode={build}
+```
 
 ```text
 HeadVer와 versionCode 확정
