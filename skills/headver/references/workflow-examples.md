@@ -5,214 +5,77 @@
 ## 공통 흐름
 
 ```text
-HeadVer 확정
--> immutable artifact build·publish
--> HeadVer + source revision + artifact reference 기록
--> 정확한 HeadVer Git tag 생성
--> staging 배포
--> production에 같은 artifact 승격
--> Head 종료 Git tag 생성
+Build workflow(ref=main)
+  HeadVer 확정
+  -> immutable artifact build·publish
+  -> registry에 HeadVer + artifact digest 보존
+  -> 정확한 HeadVer Git tag 생성
+
+Auto-staging bridge
+  Build 성공 감지
+  -> Staging workflow를 exact tag ref로 dispatch
+
+Staging workflow(ref=exact tag)
+  tag와 registry에서 artifact 조회
+  -> 기존 artifact 배포
+
+Production request
+  exact tag 선택
+  -> Production workflow를 exact tag ref로 dispatch
+
+Production workflow(ref=exact tag)
+  같은 artifact 승격
+  -> 정확한 GitHub Release 생성
 ```
 
 - HeadVer와 artifact는 한 번만 만든다.
-- build job은 HeadVer와 digest·checksum 같은 immutable reference를 이후 job에 전달한다.
+- 현재 Head는 repository root의 `.headver` 파일에 숫자 하나로 기록하고 version control한다. Build는 이 값을 읽고, production 성공 후 다음 Head로 바꾸는 작업은 별도 commit으로 수행한다.
+- Build workflow는 artifact publish와 exact tag 생성까지만 담당한다. environment를 참조하거나 deploy하지 않는다.
+- Build와 deploy 사이의 자동 연결은 별도 bridge가 담당한다. Bridge를 비활성화하거나 제거해도 build와 수동 staging deploy가 각각 동작해야 한다.
+- Bridge는 environment를 참조하지 않고 Deployment를 만들지 않는다.
+- staging과 production은 exact HeadVer tag ref로 시작하는 별도 workflow run이어야 한다. 같은 `main` run의 job 분리나 reusable workflow 호출만으로는 ref가 바뀌지 않는다.
+- tag를 `workflow_dispatch` input으로만 전달하면 GitHub Deployment ref는 tag가 되지 않는다. 실제 dispatch ref도 exact tag여야 한다.
+- 서로 다른 workflow run은 job output을 공유하지 못하므로 deploy는 exact tag에서 HeadVer와 source revision을 확인하고 registry에서 artifact reference와 digest를 조회한다. Auto-staging bridge는 triggering build run에서 exact tag를 찾을 수 있어야 한다.
+- 같은 source revision을 새 Build로 다시 만들 수 있으므로 bridge는 commit SHA만으로 tag를 고르지 않는다. 이 reference처럼 triggering build의 run number가 Build라면 SHA와 run number를 함께 사용한다.
 - staging과 production에서는 source를 다시 build하지 않는다.
-- 정확한 HeadVer tag는 staging에 배포한 build의 commit을 가리키며 이동시키지 않는다.
-- production 성공 후 같은 commit에 Head 종료 tag를 추가한다.
-- Head 종료 tag는 Git history 탐색용이며 배포나 artifact 조회에 사용하지 않는다.
+- 자동 staging은 실행 중인 deploy를 완료하고 대기 중인 이전 deploy를 더 최신 Build로 교체한다. 중간 Build를 모두 순서대로 배포하기 위한 queue를 만들지 않는다.
+- 정확한 HeadVer tag는 build commit을 가리키며 이동시키지 않는다.
+- Head 번호만 나타내는 `v6` 같은 별도 tag를 만들지 않는다.
 - 같은 artifact의 release는 직렬화한다. 서로 독립된 artifact는 concurrency group을 분리한다.
 
-Head 설정만 바뀐 commit도 다음 릴리스 라인의 baseline으로 build·publish하고 staging에 배포한다. Build와 정확한 HeadVer tag를 발급하되 production 배포와 Head 종료 tag 생성은 별도 production workflow를 실행할 때 수행한다.
+`.headver`만 바뀐 commit도 다음 릴리스 라인의 baseline으로 build·publish하고 exact tag를 발급한다. Auto-staging이 활성화되어 있으면 bridge가 별도 staging workflow를 실행한다. Production 배포와 exact tag의 GitHub Release 생성은 별도 production workflow에서 수행한다.
+
+### GitHub Environment 경계
+
+이 문서의 `environment: staging`과 `environment: production`은 GitHub의 Deployment Environment다. 애플리케이션의 `.env`, `APP_ENV` 또는 build flavor를 뜻하지 않는다.
+
+- 실제 배포 job만 GitHub Environment를 참조한다. Build와 bridge에는 붙이지 않는다.
+- GitHub Environment는 배포 승인, 허용 branch·tag, 환경별 secret·variable과 Deployment history의 경계다.
+- runtime secret과 환경별 설정은 보호 규칙을 통과한 deploy job에서 주입하며 artifact에 포함하지 않는다.
+- Environment 자체가 배포를 직렬화하지는 않는다. 같은 배포 대상은 별도의 concurrency group으로 직렬화한다.
+- staging과 production의 허용 tag 규칙은 exact HeadVer tag만 받을 수 있도록 설정한다.
+
+GitHub Release는 production 성공을 exact tag에 기록하는 release metadata다. Artifact build나 deploy를 대신하지 않으며, 이를 만들기 위해 source를 다시 build하거나 artifact를 다시 publish하지 않는다.
 
 GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서는 바뀌지 않는다. workflow 교체·분리, 같은 artifact를 발행하는 다른 workflow와 외부 플랫폼의 기존 build number를 확인하고 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다.
 
 `Asia/Seoul`의 YearWeek은 `TZ=Asia/Seoul date +%g%V`처럼 계산한다. `%y%V`를 사용하지 않고 `2018-12-31 -> 1901`, `2019-12-31 -> 2001`, `2016-01-01 -> 1553` 경계값을 검증한다.
 
-## GitHub Actions 예시
+## GitHub Actions workflow 파일
 
-다음 예시는 특정 action이나 reusable workflow에 의존하지 않는다. `main`에 반영된 commit을 자동으로 build해 staging에 배포하고, production 승격만 별도 수동 workflow로 실행한다.
+각 예시는 실제 `.github/workflows/*.yaml` 파일 하나와 일대일로 대응한다. 필요한 파일의 reference만 읽고 repository의 build, registry와 deploy 명령에 맞게 placeholder script를 교체한다.
 
-### Build & Staging workflow
+- [build-image.yaml](build-image.yaml): `main`에서 HeadVer artifact를 build·publish하고 exact tag를 만든다.
+- [trigger-staging-deploy.yaml](trigger-staging-deploy.yaml): 성공한 Build run을 exact tag의 Staging workflow로 연결한다. 자동 staging이 필요할 때만 사용한다.
+- [deploy-staging.yaml](deploy-staging.yaml): exact tag의 기존 artifact를 staging에 배포한다.
+- [request-production-release.yaml](request-production-release.yaml): GitHub Actions UI에서 선택한 tag를 실제 Production workflow의 ref로 dispatch한다. CLI로 직접 실행하면 생략할 수 있다.
+- [deploy-production.yaml](deploy-production.yaml): exact tag artifact를 production에 승격하고 정확한 GitHub Release를 만든다.
 
-```yaml
-name: HeadVer Build & Staging
+`artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다. Build workflow는 artifact를 HeadVer로 조회할 수 있게 publish하고 registry에 digest를 보존한다. Deploy workflow는 exact tag와 registry를 이용해 이 값을 다시 확인한다.
 
-on:
-  push:
-    branches:
-      - main
+Build가 성공하고 bridge 또는 staging이 실패했다면 exact tag로 Staging workflow만 다시 실행한다. Build 자체가 실패했다면 새 workflow run으로 새 Build를 발급한다.
 
-concurrency:
-  group: headver-release-${{ github.repository }}-my-app
-  cancel-in-progress: false
-
-permissions: {}
-
-jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      head: ${{ steps.headver.outputs.head }}
-      yearweek: ${{ steps.headver.outputs.yearweek }}
-      build: ${{ steps.headver.outputs.build }}
-      headver: ${{ steps.headver.outputs.headver }}
-      tag: ${{ steps.headver.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Generate HeadVer
-        id: headver
-        run: ./scripts/generate-headver.sh "$GITHUB_OUTPUT"
-
-      - name: Check HeadVer and tags
-        env:
-          HEADVER: ${{ steps.headver.outputs.headver }}
-          TAG: ${{ steps.headver.outputs.tag }}
-          BUILD: ${{ steps.headver.outputs.build }}
-        run: ./scripts/assert-headver-available.sh "$HEADVER" "$TAG" "$BUILD"
-
-  build:
-    needs: prepare
-    if: github.run_attempt == 1
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      artifact_reference: ${{ steps.publish.outputs.artifact_reference }}
-      artifact_digest: ${{ steps.publish.outputs.artifact_digest }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Build and publish artifact
-        id: publish
-        env:
-          HEADVER: ${{ needs.prepare.outputs.headver }}
-          BUILD: ${{ needs.prepare.outputs.build }}
-          SOURCE_SHA: ${{ github.sha }}
-        run: ./scripts/build-publish.sh "$GITHUB_OUTPUT"
-
-  record_build:
-    needs: [prepare, build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Create exact tag and record build
-        env:
-          HEADVER: ${{ needs.prepare.outputs.headver }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact_reference }}
-          ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact_digest }}
-          SOURCE_SHA: ${{ github.sha }}
-        run: ./scripts/record-headver-build.sh
-
-  deploy_staging:
-    needs: [build, record_build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    environment: staging
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Deploy existing artifact to staging
-        env:
-          ARTIFACT_REFERENCE: ${{ needs.build.outputs.artifact_reference }}
-        run: ./scripts/deploy.sh staging "$ARTIFACT_REFERENCE"
-```
-
-`record-headver-build.sh`는 정확한 Git tag를 만들고 HeadVer, source SHA, artifact reference와 digest를 production workflow가 다시 조회할 수 있는 영구적인 build record로 기록한다.
-
-### Production workflow
-
-```yaml
-name: HeadVer Production
-
-on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Exact HeadVer tag to deploy, for example v6.2635.147
-        required: true
-        type: string
-
-concurrency:
-  group: headver-release-${{ github.repository }}-my-app
-  cancel-in-progress: false
-
-permissions: {}
-
-jobs:
-  resolve_build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      head: ${{ steps.build_record.outputs.head }}
-      yearweek: ${{ steps.build_record.outputs.yearweek }}
-      build: ${{ steps.build_record.outputs.build }}
-      headver: ${{ steps.build_record.outputs.headver }}
-      tag: ${{ steps.build_record.outputs.tag }}
-      source_sha: ${{ steps.build_record.outputs.source_sha }}
-      artifact_reference: ${{ steps.build_record.outputs.artifact_reference }}
-      artifact_digest: ${{ steps.build_record.outputs.artifact_digest }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Resolve exact build
-        id: build_record
-        env:
-          TAG: ${{ inputs.tag }}
-        run: ./scripts/resolve-headver-build.sh "$TAG" "$GITHUB_OUTPUT"
-
-  deploy_production:
-    needs: resolve_build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    environment: production
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Deploy selected artifact to production
-        env:
-          ARTIFACT_REFERENCE: ${{ needs.resolve_build.outputs.artifact_reference }}
-        run: ./scripts/deploy.sh production "$ARTIFACT_REFERENCE"
-
-  close_head:
-    needs: [resolve_build, deploy_production]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.tag }}
-
-      - name: Create Head closing tag and exact Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD: ${{ needs.resolve_build.outputs.head }}
-          HEADVER: ${{ needs.resolve_build.outputs.headver }}
-          TAG: ${{ needs.resolve_build.outputs.tag }}
-          SOURCE_SHA: ${{ needs.resolve_build.outputs.source_sha }}
-          ARTIFACT_REFERENCE: ${{ needs.resolve_build.outputs.artifact_reference }}
-          ARTIFACT_DIGEST: ${{ needs.resolve_build.outputs.artifact_digest }}
-        run: ./scripts/close-head.sh
-```
-
-production workflow의 수동 실행이 배포할 정확한 tag를 선택하는 단계다. `environment: production`은 environment secret과 배포 기록을 사용하기 위한 것이며, repository에 required reviewer가 설정된 경우에만 추가 승인을 기다린다.
-
-`artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다. build job이 성공하고 staging만 실패했다면 **Re-run failed jobs**로 staging만 다시 실행한다. build job 자체가 실패했다면 새 workflow run으로 새 Build를 발급한다.
-
-`packages: read|write`는 GitHub Packages를 사용하는 예시다. 다른 registry를 사용하면 해당 permission을 제거하고 필요한 credential과 최소 권한으로 바꾼다.
+예시의 `packages: read|write`는 GitHub Packages 기준이다. 다른 registry를 사용하면 제거하고 필요한 credential과 최소 권한으로 바꾼다.
 
 ## 정적 웹
 

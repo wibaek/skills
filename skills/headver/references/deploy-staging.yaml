@@ -1,0 +1,36 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  # 실행 중인 deploy는 완료하고, 대기 중인 이전 deploy는 최신 dispatch로 교체한다.
+  group: headver-deploy-staging-${{ github.repository }}-my-app
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy_staging:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    environment: staging
+    steps:
+      - name: Validate exact HeadVer ref
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          test "$REF_TYPE" = "tag"
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]{4}\.[0-9]+$ ]]
+
+      - uses: actions/checkout@v6
+
+      - name: Deploy HeadVer artifact to staging
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          HEADVER="${TAG#v}"
+          ./scripts/deploy.sh staging "$HEADVER"
