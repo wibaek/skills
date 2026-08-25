@@ -21,6 +21,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
-          gh workflow run production-deploy.yaml \
+          gh workflow run deploy-production.yaml \
             --repo "$GITHUB_REPOSITORY" \
             --ref "$TAG"

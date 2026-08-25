@@ -1,4 +1,4 @@
-name: Trigger Auto Staging
+name: Trigger Staging Deploy
 
 on:
   workflow_run:

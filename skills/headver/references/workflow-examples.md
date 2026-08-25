@@ -66,10 +66,10 @@ GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서�
 각 예시는 실제 `.github/workflows/*.yaml` 파일 하나와 일대일로 대응한다. 필요한 파일의 reference만 읽고 repository의 build, registry와 deploy 명령에 맞게 placeholder script를 교체한다.
 
 - [build-image.yaml](build-image.yaml): `main`에서 HeadVer artifact를 build·publish하고 exact tag를 만든다.
-- [trigger-auto-staging.yaml](trigger-auto-staging.yaml): 성공한 Build run을 exact tag의 Staging workflow로 연결한다. 자동 staging이 필요할 때만 사용한다.
+- [trigger-staging-deploy.yaml](trigger-staging-deploy.yaml): 성공한 Build run을 exact tag의 Staging workflow로 연결한다. 자동 staging이 필요할 때만 사용한다.
 - [deploy-staging.yaml](deploy-staging.yaml): exact tag의 기존 artifact를 staging에 배포한다.
 - [request-production-release.yaml](request-production-release.yaml): GitHub Actions UI에서 선택한 tag를 실제 Production workflow의 ref로 dispatch한다. CLI로 직접 실행하면 생략할 수 있다.
-- [production-deploy.yaml](production-deploy.yaml): exact tag artifact를 production에 승격하고 Head를 닫는다.
+- [deploy-production.yaml](deploy-production.yaml): exact tag artifact를 production에 승격하고 Head를 닫는다.
 
 `artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다. Build workflow는 artifact를 HeadVer로 조회할 수 있게 publish하고 registry에 digest를 보존한다. Deploy workflow는 exact tag와 registry를 이용해 이 값을 다시 확인한다.
 
