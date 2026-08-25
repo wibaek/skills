@@ -1,0 +1,65 @@
+name: Production Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: headver-deploy-production-${{ github.repository }}-my-app
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  validate_production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate exact HeadVer ref
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          test "$REF_TYPE" = "tag"
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]{4}\.[0-9]+$ ]]
+
+  deploy_production:
+    needs: validate_production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Deploy selected artifact to production
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          HEADVER="${TAG#v}"
+          ./scripts/deploy.sh production "$HEADVER"
+
+  close_head:
+    needs: [validate_production, deploy_production]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create Head closing tag and exact Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          HEADVER="${TAG#v}"
+          HEAD="${HEADVER%%.*}"
+          CLOSING_TAG="v$HEAD"
+
+          git tag "$CLOSING_TAG" "$SOURCE_SHA"
+          git push origin "refs/tags/$CLOSING_TAG"
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "$HEADVER" \
+            --generate-notes

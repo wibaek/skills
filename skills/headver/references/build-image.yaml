@@ -1,0 +1,103 @@
+name: Build Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: headver-build-${{ github.repository }}-my-app
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.headver.outputs.build }}
+      headver: ${{ steps.headver.outputs.headver }}
+      tag: ${{ steps.headver.outputs.tag }}
+    steps:
+      - name: Validate source ref
+        run: test "$GITHUB_REF" = "refs/heads/main"
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read Head and generate HeadVer
+        id: headver
+        env:
+          RELEASE_TIMEZONE: Asia/Seoul
+        run: |
+          HEAD="$(<.headver)"
+          [[ "$HEAD" =~ ^[0-9]+$ ]]
+
+          YEARWEEK="$(TZ="$RELEASE_TIMEZONE" date +%g%V)"
+          BUILD="$GITHUB_RUN_NUMBER"
+          HEADVER="$HEAD.$YEARWEEK.$BUILD"
+          TAG="v$HEADVER"
+
+          if git show-ref --verify --quiet "refs/tags/v$HEAD"; then
+            echo "Head $HEAD is already closed" >&2
+            exit 1
+          fi
+
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists" >&2
+            exit 1
+          fi
+
+          MAX_BUILD="$(
+            git tag --list \
+              | sed -nE 's/^v[0-9]+\.[0-9]{4}\.([0-9]+)$/\1/p' \
+              | sort -n \
+              | tail -n 1
+          )"
+          if [[ -n "$MAX_BUILD" && "$BUILD" -le "$MAX_BUILD" ]]; then
+            echo "Build $BUILD must be greater than existing Build $MAX_BUILD" >&2
+            exit 1
+          fi
+
+          {
+            echo "build=$BUILD"
+            echo "headver=$HEADVER"
+            echo "tag=$TAG"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    if: github.run_attempt == 1
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build and publish artifact
+        env:
+          HEADVER: ${{ needs.prepare.outputs.headver }}
+          BUILD: ${{ needs.prepare.outputs.build }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: ./scripts/build-publish.sh
+
+  create_tag:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create exact tag
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git tag "$TAG" "$SOURCE_SHA"
+          git push origin "refs/tags/$TAG"
