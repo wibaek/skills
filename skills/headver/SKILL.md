@@ -38,14 +38,14 @@ HeadVer는 표시용 문자열이 아니라 artifact identity다. version을 sou
 
 ```text
 v5.2633.140 production 성공
--> 같은 commit에 Head 종료 tag v5 생성
+-> GitHub Release를 정확한 tag v5.2633.140에 연결
 -> `.headver`를 6으로 변경
 -> 6.2634.141 baseline artifact build·publish
 -> 정확한 Git tag v6.2634.141 생성
 -> staging 배포
 ```
 
-Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 릴리스 라인의 정상적인 첫 build다. Build를 소비하고 다른 build와 같은 방식으로 staging에 배포한다. 다만 production 배포와 `v6` 종료 tag 생성은 자동으로 수행하지 않는다.
+Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 릴리스 라인의 정상적인 첫 build다. Build를 소비하고 다른 build와 같은 방식으로 staging에 배포한다. Production workflow는 `.headver`를 변경하지 않는다.
 
 Head 6에서 변경사항이 쌓이면 새 Build를 만들며, 자동 staging은 배포 가능한 최신 Build를 대상으로 한다.
 
@@ -66,12 +66,11 @@ production request에서 v6.2635.147 선택
 -> 기록된 digest A를 production에 승격
 -> source를 다시 build하지 않음
 -> production 성공
--> 같은 commit에 Head 종료 tag v6 생성
 -> GitHub Release는 정확한 tag v6.2635.147에 연결
 -> `.headver`를 7로 변경해 baseline build·staging
 ```
 
-`v6`는 Head 6의 production 확정 지점을 Git history에서 찾기 위한 immutable 표식이다. 배포 입력, latest pointer 또는 artifact identity로 사용하지 않는다. `v6`가 생성되면 Head 6은 닫히며 이후 hotfix도 새 Head를 사용한다.
+Head 값이 `6`이라는 이유로 `v6` 같은 별도 tag를 만들지 않는다. Git tag는 exact HeadVer인 `v6.2635.147`처럼 artifact identity를 나타내는 형태만 사용한다. 다음 Head로 전환할 때는 `.headver`를 변경해 version control한다.
 
 ## 반드시 지킬 것
 
@@ -104,7 +103,7 @@ deployment history에 exact tag ref를 남기는 방법
 ```
 
 - 독립적으로 build·배포되는 프론트, 백엔드와 모바일 앱은 artifact별 HeadVer를 사용한다.
-- Head 종료 tag가 이미 있으면 닫힌 Head의 재사용으로 보고 새 artifact 생성을 거부한다.
+- Head 번호만 나타내는 별도 Git tag를 만들거나 artifact identity로 사용하지 않는다.
 - 오류나 불확실한 외부 상태에서는 fail closed한다.
 - tag·Release 생성, push, 스토어 업로드와 production 배포는 사용자가 명시적으로 요청한 범위에서만 수행한다.
 

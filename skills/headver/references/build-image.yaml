@@ -42,11 +42,6 @@ jobs:
           HEADVER="$HEAD.$YEARWEEK.$BUILD"
           TAG="v$HEADVER"
 
-          if git show-ref --verify --quiet "refs/tags/v$HEAD"; then
-            echo "Head $HEAD is already closed" >&2
-            exit 1
-          fi
-
           if git show-ref --verify --quiet "refs/tags/$TAG"; then
             echo "Tag $TAG already exists" >&2
             exit 1

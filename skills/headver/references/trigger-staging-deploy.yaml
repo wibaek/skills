@@ -25,11 +25,13 @@ jobs:
       - name: Resolve exact tag
         id: tag
         env:
+          BUILD: ${{ github.event.workflow_run.run_number }}
           SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
+          [[ "$BUILD" =~ ^[0-9]+$ ]]
           mapfile -t tags < <(
             git tag --points-at "$SOURCE_SHA" \
-              | grep -E '^v[0-9]+\.[0-9]{4}\.[0-9]+$'
+              | grep -E "^v[0-9]+\.[0-9]{4}\.${BUILD}$"
           )
           test "${#tags[@]}" -eq 1
           echo "tag=${tags[0]}" >> "$GITHUB_OUTPUT"

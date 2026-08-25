@@ -38,28 +38,20 @@ jobs:
           HEADVER="${TAG#v}"
           ./scripts/deploy.sh production "$HEADVER"
 
-  close_head:
-    needs: [validate_production, deploy_production]
+  create_release:
+    needs: deploy_production
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Create Head closing tag and exact Release
+      - name: Create exact Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-          SOURCE_SHA: ${{ github.sha }}
         run: |
           HEADVER="${TAG#v}"
-          HEAD="${HEADVER%%.*}"
-          CLOSING_TAG="v$HEAD"
-
-          git tag "$CLOSING_TAG" "$SOURCE_SHA"
-          git push origin "refs/tags/$CLOSING_TAG"
-
           gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --title "$HEADVER" \
             --generate-notes

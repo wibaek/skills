@@ -25,7 +25,7 @@ Production request
 
 Production workflow(ref=exact tag)
   같은 artifact 승격
-  -> Head 종료 Git tag와 정확한 GitHub Release 생성
+  -> 정확한 GitHub Release 생성
 ```
 
 - HeadVer와 artifact는 한 번만 만든다.
@@ -36,14 +36,14 @@ Production workflow(ref=exact tag)
 - staging과 production은 exact HeadVer tag ref로 시작하는 별도 workflow run이어야 한다. 같은 `main` run의 job 분리나 reusable workflow 호출만으로는 ref가 바뀌지 않는다.
 - tag를 `workflow_dispatch` input으로만 전달하면 GitHub Deployment ref는 tag가 되지 않는다. 실제 dispatch ref도 exact tag여야 한다.
 - 서로 다른 workflow run은 job output을 공유하지 못하므로 deploy는 exact tag에서 HeadVer와 source revision을 확인하고 registry에서 artifact reference와 digest를 조회한다. Auto-staging bridge는 triggering build run에서 exact tag를 찾을 수 있어야 한다.
+- 같은 source revision을 새 Build로 다시 만들 수 있으므로 bridge는 commit SHA만으로 tag를 고르지 않는다. 이 reference처럼 triggering build의 run number가 Build라면 SHA와 run number를 함께 사용한다.
 - staging과 production에서는 source를 다시 build하지 않는다.
 - 자동 staging은 실행 중인 deploy를 완료하고 대기 중인 이전 deploy를 더 최신 Build로 교체한다. 중간 Build를 모두 순서대로 배포하기 위한 queue를 만들지 않는다.
 - 정확한 HeadVer tag는 build commit을 가리키며 이동시키지 않는다.
-- production 성공 후 같은 commit에 Head 종료 tag를 추가한다.
-- Head 종료 tag는 Git history 탐색용이며 배포나 artifact 조회에 사용하지 않는다.
+- Head 번호만 나타내는 `v6` 같은 별도 tag를 만들지 않는다.
 - 같은 artifact의 release는 직렬화한다. 서로 독립된 artifact는 concurrency group을 분리한다.
 
-`.headver`만 바뀐 commit도 다음 릴리스 라인의 baseline으로 build·publish하고 exact tag를 발급한다. Auto-staging이 활성화되어 있으면 bridge가 별도 staging workflow를 실행한다. Production 배포와 Head 종료 tag 생성은 별도 production workflow에서 수행한다.
+`.headver`만 바뀐 commit도 다음 릴리스 라인의 baseline으로 build·publish하고 exact tag를 발급한다. Auto-staging이 활성화되어 있으면 bridge가 별도 staging workflow를 실행한다. Production 배포와 exact tag의 GitHub Release 생성은 별도 production workflow에서 수행한다.
 
 ### GitHub Environment 경계
 
@@ -53,9 +53,9 @@ Production workflow(ref=exact tag)
 - GitHub Environment는 배포 승인, 허용 branch·tag, 환경별 secret·variable과 Deployment history의 경계다.
 - runtime secret과 환경별 설정은 보호 규칙을 통과한 deploy job에서 주입하며 artifact에 포함하지 않는다.
 - Environment 자체가 배포를 직렬화하지는 않는다. 같은 배포 대상은 별도의 concurrency group으로 직렬화한다.
-- staging과 production의 허용 tag 규칙은 exact HeadVer tag를 받을 수 있도록 설정한다. Head 종료 tag는 허용하지 않는다.
+- staging과 production의 허용 tag 규칙은 exact HeadVer tag만 받을 수 있도록 설정한다.
 
-GitHub Release와 Head 종료 tag는 production 성공을 기록하는 release metadata다. Artifact build나 deploy를 대신하지 않으며, 이를 만들기 위해 source를 다시 build하거나 artifact를 다시 publish하지 않는다.
+GitHub Release는 production 성공을 exact tag에 기록하는 release metadata다. Artifact build나 deploy를 대신하지 않으며, 이를 만들기 위해 source를 다시 build하거나 artifact를 다시 publish하지 않는다.
 
 GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서는 바뀌지 않는다. workflow 교체·분리, 같은 artifact를 발행하는 다른 workflow와 외부 플랫폼의 기존 build number를 확인하고 충돌할 수 있으면 검증된 offset 또는 중앙 counter를 사용한다.
 
@@ -69,7 +69,7 @@ GitHub Actions의 `github.run_number`는 workflow별 counter이며 rerun에서�
 - [trigger-staging-deploy.yaml](trigger-staging-deploy.yaml): 성공한 Build run을 exact tag의 Staging workflow로 연결한다. 자동 staging이 필요할 때만 사용한다.
 - [deploy-staging.yaml](deploy-staging.yaml): exact tag의 기존 artifact를 staging에 배포한다.
 - [request-production-release.yaml](request-production-release.yaml): GitHub Actions UI에서 선택한 tag를 실제 Production workflow의 ref로 dispatch한다. CLI로 직접 실행하면 생략할 수 있다.
-- [deploy-production.yaml](deploy-production.yaml): exact tag artifact를 production에 승격하고 Head를 닫는다.
+- [deploy-production.yaml](deploy-production.yaml): exact tag artifact를 production에 승격하고 정확한 GitHub Release를 만든다.
 
 `artifact-reference`는 container digest, object URI와 checksum 또는 store build ID처럼 같은 artifact를 다시 지정할 수 있는 값이어야 한다. Build workflow는 artifact를 HeadVer로 조회할 수 있게 publish하고 registry에 digest를 보존한다. Deploy workflow는 exact tag와 registry를 이용해 이 값을 다시 확인한다.
 
