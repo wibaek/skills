@@ -45,19 +45,22 @@ v5.2633.140 production 성공
 
 Head만 변경한 baseline은 이전 production과 기능이 같아도 다음 릴리스 라인의 정상적인 첫 build다. Build를 소비하고 다른 build와 같은 방식으로 staging에서 검증한다. 다만 production 배포와 `v6` 종료 tag 생성은 자동으로 수행하지 않는다.
 
-Head 6에서 변경사항이 쌓이면 새 Build를 계속 staging에 배포한다.
+Head 6에서 변경사항이 쌓이면 새 Build를 만들며, 자동 staging은 배포 가능한 최신 Build를 대상으로 한다.
 
-기본 workflow는 `main`에 반영된 commit마다 artifact를 자동으로 build·publish하고 staging에 배포한다. production만 검증을 마친 exact tag를 선택해 별도로 실행한다.
+GitHub Actions의 기본 자동화는 `main`에 반영된 commit의 artifact를 build·publish하고, 별도의 staging deploy workflow를 exact tag ref로 실행한다. Build와 deploy는 서로 다른 workflow여야 한다. 자동 staging은 build 성공을 감지하는 얇은 bridge가 연결하며, 실행 중인 staging deploy는 중단하지 않되 대기 중인 이전 deploy는 더 최신 Build로 교체할 수 있다. Bridge를 비활성화해도 build와 수동 staging deploy는 각각 독립적으로 동작해야 한다. Production도 검증을 마친 exact tag ref의 별도 workflow로 실행한다.
 
 ```text
-6.2634.142 build·publish -> v6.2634.142 -> staging
-6.2635.147 build·publish -> v6.2635.147 -> staging
+main -> 6.2634.142 build·publish -> v6.2634.142 기록
+                                      -> bridge -> staging workflow(ref=v6.2634.142)
+main -> 6.2635.147 build·publish -> v6.2635.147 기록
+                                      -> bridge -> staging workflow(ref=v6.2635.147)
 ```
 
 production에 올릴 때는 검증을 마친 정확한 tag를 선택한다.
 
 ```text
-v6.2635.147 선택
+production request에서 v6.2635.147 선택
+-> production workflow를 ref=v6.2635.147로 실행
 -> 기록된 digest A를 production에 승격
 -> source를 다시 build하지 않음
 -> production 성공
@@ -77,6 +80,8 @@ v6.2635.147 선택
 5. 같은 artifact에 서로 다른 두 HeadVer를 붙이지 않는다.
 6. 환경 설정이나 flavor 때문에 binary가 달라지면 별도 artifact와 version으로 관리한다.
 7. 같은 artifact와 배포 대상의 release는 직렬화한다.
+8. GitHub Actions의 Build workflow는 GitHub Environment를 참조하거나 deploy하지 않는다. 자동 staging 연결은 독립된 bridge에 둔다.
+9. GitHub Actions의 staging과 production workflow는 exact HeadVer tag ref로 시작한다. tag를 input으로만 전달하거나 `main` run 안에서 deploy하지 않는다.
 
 같은 workflow run을 재실행하더라도 이미 게시된 HeadVer artifact를 다시 build하지 않는다. 안전한 resume을 증명할 수 없으면 새 run으로 새 Build를 발급한다.
 
@@ -91,6 +96,9 @@ release timezone
 Build source와 기존 최대값
 version 주입 지점
 artifact identity와 staging→production 승격 방식
+build와 deploy workflow의 경계
+자동 staging bridge를 비활성화하고 수동 deploy로 전환하는 방법
+deployment history에 exact tag ref를 남기는 방법
 ```
 
 - 독립적으로 build·배포되는 프론트, 백엔드와 모바일 앱은 artifact별 HeadVer를 사용한다.
@@ -100,6 +108,6 @@ artifact identity와 staging→production 승격 방식
 
 앱·웹 서비스·백엔드 같은 제품 artifact에 사용한다. 공개 라이브러리처럼 version으로 API 호환성을 표현하는 패키지는 기존 SemVer 또는 생태계 정책을 우선한다.
 
-GitHub Actions를 구현할 때 [워크플로우 예시](references/workflow-examples.md)에서 필요한 부분을 읽는다.
+GitHub Actions를 구현할 때 [워크플로우 인덱스](references/workflow-examples.md)를 먼저 읽고, 실제로 필요한 workflow 파일의 reference만 추가로 읽는다.
 
 HeadVer 원본 명세: https://github.com/line/headver

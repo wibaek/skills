@@ -1,0 +1,51 @@
+# Optional bridge: 성공한 HeadVer Build run을 exact tag의 Staging workflow로 연결한다.
+# Build, deploy, GitHub Environment 또는 Deployment를 소유하지 않는다.
+
+name: HeadVer Auto Staging
+
+on:
+  workflow_run:
+    workflows:
+      - HeadVer Build
+    types:
+      - completed
+
+permissions: {}
+
+jobs:
+  dispatch_staging:
+    if: github.event.workflow_run.conclusion == 'success' && vars.AUTO_DEPLOY_STAGING == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve triggering build
+        id: build_record
+        env:
+          BUILD_RUN_ID: ${{ github.event.workflow_run.id }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: ./scripts/resolve-build-run.sh "$GITHUB_OUTPUT"
+
+      - name: Validate triggering build
+        env:
+          TAG: ${{ steps.build_record.outputs.tag }}
+          SOURCE_SHA: ${{ steps.build_record.outputs.source_sha }}
+          EXPECTED_SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          ARTIFACT_REFERENCE: ${{ steps.build_record.outputs.artifact_reference }}
+          ARTIFACT_DIGEST: ${{ steps.build_record.outputs.artifact_digest }}
+        run: ./scripts/assert-build-record.sh
+
+      - name: Dispatch exact tag to staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.build_record.outputs.tag }}
+        run: |
+          gh workflow run headver-staging.yaml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$TAG"
+
+# AUTO_DEPLOY_STAGING=false 또는 workflow 비활성화 시 자동 staging만 중단된다.
+# GITHUB_TOKEN으로 만든 tag의 push event 대신 workflow_dispatch를 사용한다.
